@@ -285,58 +285,58 @@ server/
 ## 4. Step-by-Step Task Checklist (8-Week Timeline)
 
 ### Week 1 — Onboarding & Contract
-- [ ] Clone repo created by M1, run project locally
-- [ ] Review API contract document; contribute Cart/Order/Payment/Review shapes
-- [ ] Set up personal `.env` with Stripe test keys, SMTP creds
+- [x] Clone repo created by M1, run project locally
+- [x] Review API contract document; contribute Cart/Order/Payment/Review shapes
+- [x] Set up personal `.env` with Stripe test keys, SMTP creds
 
 ### Week 2–3 — Dependency Wait + Cart APIs (starts after M1 delivers models, Week 2)
-- [ ] `POST /api/cart/add`: find or create Cart doc for user, push/update item `{productId, qty, size}`; validate stock availability against `Product.sizes[].stock`
-- [ ] `PUT /api/cart/update`: update qty or size for a cart item; re-validate stock
-- [ ] `DELETE /api/cart/remove/:productId`: remove item from cart
-- [ ] `GET /api/cart`: get current user's cart, populate product name/price/images
-- [ ] `DELETE /api/cart/clear`: clear entire cart (called after order success)
-- [ ] Zod validation for all cart inputs
+- [x] `POST /api/cart/add`: find or create Cart doc for user, push/update item `{productId, qty, size}`; validate stock availability against `Product.sizes[].stock`
+- [x] `PUT /api/cart/update`: update qty or size for a cart item; re-validate stock
+- [x] `DELETE /api/cart/remove/:productId`: remove item from cart
+- [x] `GET /api/cart`: get current user's cart, populate product name/price/images
+- [x] `DELETE /api/cart/clear`: clear entire cart (called after order success)
+- [x] Zod validation for all cart inputs
 - [ ] Cart unit tests with Jest (mock Product model)
 
 ### Week 3–4 — Order APIs + Payment
-- [ ] `POST /api/orders/create`:
-  - Validate cart not empty
-  - Check stock for each item (decrement `Product.sizes[].stock`)
-  - Calculate total (apply coupon discount if `couponCode` provided)
-  - If `paymentMethod === 'stripe'`: call `stripeService.createPaymentIntent(amount)`; return `clientSecret` to frontend
-  - If `paymentMethod === 'cod'`: set `paymentStatus: 'pending'`, create Order immediately
-  - Save Order doc; call `cartController.clearCart`
-- [ ] `POST /api/payment/webhook`: verify Stripe signature; on `payment_intent.succeeded` → update `Order.paymentStatus = 'paid'`, emit Socket event
-- [ ] `GET /api/orders/:userId`: user's own orders (paginated, sorted newest first)
-- [ ] `GET /api/orders/single/:orderId`: single order detail
-- [ ] `GET /api/admin/orders`: all orders, filterable by `status`, `paymentMethod`, date range
-- [ ] `PUT /api/admin/orders/:id/status`: update Order status enum; emit WebSocket event to specific user room
-- [ ] Zod validation for order creation input
+- [x] `POST /api/orders/create`:
+  - [x] Validate cart not empty
+  - [x] Check stock for each item (decrement `Product.sizes[].stock`)
+  - [x] Calculate total (apply coupon discount if `couponCode` provided)
+  - [x] If `paymentMethod === 'stripe'`: call `stripeService.createPaymentIntent(amount)`; return `clientSecret` to frontend
+  - [x] If `paymentMethod === 'cod'`: set `paymentStatus: 'pending'`, create Order immediately
+  - [x] Save Order doc; call `cartController.clearCart`
+- [x] `POST /api/payment/webhook`: verify Stripe signature; on `payment_intent.succeeded` → update `Order.paymentStatus = 'paid'`, emit Socket event
+- [x] `GET /api/orders/:userId`: user's own orders (paginated, sorted newest first)
+- [x] `GET /api/orders/single/:orderId`: single order detail
+- [x] `GET /api/admin/orders`: all orders, filterable by `status`, `paymentMethod`, date range
+- [x] `PUT /api/admin/orders/:id/status`: update Order status enum; emit WebSocket event to specific user room
+- [x] Zod validation for order creation input
 - [ ] Integration tests for order creation (mock Stripe, mock DB transactions)
 
 ### Week 4 — WebSocket / Real-Time Order Tracking
-- [ ] `socket/orderSocket.js`: initialize Socket.io on `server.js` (M1 must expose `httpServer`); handle user joining room `order:<orderId>`
-- [ ] Emit `ORDER_STATUS_UPDATED` event with `{ orderId, status, timestamp }` whenever admin updates status
-- [ ] Emit `PAYMENT_CONFIRMED` on Stripe webhook success
-- [ ] Test: open two browser tabs, confirm real-time status propagation
+- [x] `socket/orderSocket.js`: initialize Socket.io on `server.js` (M1 must expose `httpServer`); handle user joining room `order:<orderId>`
+- [x] Emit `ORDER_STATUS_UPDATED` event with `{ orderId, status, timestamp }` whenever admin updates status
+- [x] Emit `PAYMENT_CONFIRMED` on Stripe webhook success
+- [x] Test: open two browser tabs, confirm real-time status propagation
 
 ### Week 5 — Coupon, Reviews, Inventory Cron
-- [ ] `POST /api/coupons/validate`: find coupon by `code`, check `expiresAt > now`, check `usedCount < usageLimit`; return `discountPct` or error
-- [ ] Coupon application: after validation, increment `usedCount` atomically on order creation
-- [ ] `POST /api/reviews/:productId`: create Review doc; recalculate `Product.averageRating` using aggregation pipeline, update Product doc
-- [ ] `GET /api/reviews/:productId`: paginated list, sorted by newest/highest rating
-- [ ] `cron/lowStockCron.js`: node-cron schedule (`0 8 * * *`); query `Product.sizes` where `stock < 10`; send email via `emailService.js` (Nodemailer + Gmail SMTP) with product name, SKU, stock level
-- [ ] `emailService.js`: reusable `sendEmail(to, subject, html)` function; use HTML template for low-stock alert
+- [x] `POST /api/coupons/validate`: find coupon by `code`, check `expiresAt > now`, check `usedCount < usageLimit`; return `discountPct` or error
+- [x] Coupon application: after validation, increment `usedCount` atomically on order creation
+- [x] `POST /api/reviews/:productId`: create Review doc; recalculate `Product.averageRating` using aggregation pipeline, update Product doc
+- [x] `GET /api/reviews/:productId`: paginated list, sorted by newest/highest rating
+- [x] `cron/lowStockCron.js`: node-cron schedule (`0 8 * * *`); query `Product.sizes` where `stock < 10`; send email via `emailService.js` (Nodemailer + Gmail SMTP) with product name, SKU, stock level
+- [x] `emailService.js`: reusable `sendEmail(to, subject, html)` function; use HTML template for low-stock alert
 
 ### Week 5–6 — Analytics API
-- [ ] `GET /api/admin/analytics/revenue`: MongoDB aggregation pipeline; group Orders by week/month; return `{ period, revenue, orderCount, avgOrderValue }`
-- [ ] `GET /api/admin/analytics/top-products`: aggregate order items, group by productId, sum qty sold
-- [ ] `GET /api/admin/analytics/summary`: total revenue, total orders, total users count (quick stats for dashboard cards)
+- [x] `GET /api/admin/analytics/revenue`: MongoDB aggregation pipeline; group Orders by week/month; return `{ period, revenue, orderCount, avgOrderValue }`
+- [x] `GET /api/admin/analytics/top-products`: aggregate order items, group by productId, sum qty sold
+- [x] `GET /api/admin/analytics/summary`: total revenue, total orders, total users count (quick stats for dashboard cards)
 
 ### Week 6–7 — Hardening
-- [ ] Add rate limiting on `/api/orders/create` (10 req/min per user)
+- [x] Add rate limiting on `/api/orders/create` (10 req/min per user)
 - [ ] Stripe idempotency keys to prevent duplicate charges
-- [ ] Stock decrement in MongoDB transaction (`session.withTransaction`) to prevent race conditions
+- [x] Stock decrement in MongoDB transaction (`session.withTransaction`) to prevent race conditions
 - [ ] Write full Postman collection for M2 routes; hand off to M4
 
 ### Week 8 — Final
