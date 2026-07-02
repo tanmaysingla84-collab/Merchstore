@@ -2,15 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { loginUser, clearAuthError } from '../features/auth/authSlice';
+import { loginUser, clearAuthError, fetchCurrentUser } from '../features/auth/authSlice';
 import Loader from '../components/Loader';
-
-const GU_DOMAINS = ['@geeta.ac.in', '@geetauniversity.ac.in', '@geetauniversity.edu.in'];
-const isGUEmail  = (val) => GU_DOMAINS.some(d => val.toLowerCase().endsWith(d));
+import {
+  GU_DOMAINS,
+  isGUEmail,
+  completePendingCartAction,
+  consumeAuthRedirectPath,
+  getLoginRedirectPath,
+  saveAuthRedirectPath,
+} from '../utils/authRedirect';
 
 const loginSchema = z.object({
   email: z.string()
@@ -24,8 +29,9 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate  = useNavigate();
   const location  = useLocation();
+  const [searchParams] = useSearchParams();
   const { loading, error, token } = useSelector((s) => s.auth);
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = getLoginRedirectPath(location);
 
   const [showPassword, setShowPassword] = useState(false);
   const [emailFocused, setEmailFocused]   = useState(false);
@@ -39,18 +45,33 @@ const Login = () => {
   const emailValid = isGUEmail(emailVal) && emailVal.includes('@');
 
   useEffect(() => {
-    if (token) navigate(from, { replace: true });
-    return () => { dispatch(clearAuthError()); };
-  }, [token, navigate, from, dispatch]);
+    if (searchParams.get('error') === 'google_auth_failed') {
+      toast.error('Google sign-in failed. Only Geeta University emails are allowed.');
+    }
+  }, [searchParams]);
 
-  const onSubmit = (data) => {
-    dispatch(loginUser(data))
-      .unwrap()
-      .then(() => toast.success('Welcome back to GU MerchStore! 🎓'))
-      .catch((err) => toast.error(err || 'Failed to authenticate'));
+  useEffect(() => {
+    if (token) {
+      navigate(from, { replace: true });
+    }
+    return () => { dispatch(clearAuthError()); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onSubmit = async (data) => {
+    try {
+      await dispatch(loginUser(data)).unwrap();
+      await dispatch(fetchCurrentUser()).unwrap();
+      await completePendingCartAction(dispatch);
+      toast.success('Welcome back to GU MerchStore!');
+      navigate(consumeAuthRedirectPath(from), { replace: true });
+    } catch (err) {
+      toast.error(err || 'Failed to authenticate');
+    }
   };
 
   const handleGoogle = () => {
+    saveAuthRedirectPath(from);
     window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/auth/google`;
   };
 
@@ -271,7 +292,7 @@ const Login = () => {
           {/* Register link */}
           <p className="text-center text-sm text-white/40 mt-8">
             New student?{' '}
-            <Link to="/register" className="text-[#d4af37] font-semibold hover:text-[#f0d060] transition-colors">
+            <Link to="/register" state={{ from: location.state?.from }} className="text-[#d4af37] font-semibold hover:text-[#f0d060] transition-colors">
               Create Account →
             </Link>
           </p>

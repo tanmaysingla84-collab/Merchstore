@@ -1,20 +1,26 @@
 import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, CreditCard } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fetchCart, updateCartItem, removeCartItem } from '../features/cart/cartSlice';
+import { useAuth } from '../hooks/useAuth';
+import { redirectToLogin } from '../utils/authRedirect';
 import Loader from '../components/Loader';
 
 const Cart = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isLoggedIn } = useAuth();
   const { items: cartItems, loading } = useSelector((state) => state.cart);
   const safeCartItems = Array.isArray(cartItems) ? cartItems : [];
 
   useEffect(() => {
-    dispatch(fetchCart());
-  }, [dispatch]);
+    if (isLoggedIn) {
+      dispatch(fetchCart());
+    }
+  }, [dispatch, isLoggedIn]);
 
   // Calculations - backend returns flat items: { productId, name, price, image, size, qty, stock }
   const subtotal = safeCartItems.reduce((acc, item) => acc + (item.price || 0) * item.qty, 0);
@@ -49,6 +55,31 @@ const Cart = () => {
         toast.error(err || 'Failed to remove product');
       });
   };
+
+  if (!isLoggedIn) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 min-h-screen text-center">
+        <ShoppingBag className="w-14 h-14 text-brand-maroon-700 mx-auto mb-4" />
+        <h1 className="font-display font-extrabold text-3xl text-brand-dark-900 tracking-tight mb-3">
+          Login to View Your Cart
+        </h1>
+        <p className="font-sans text-brand-dark-500 max-w-md mx-auto mb-8">
+          Sign in with your Geeta University email to add items, review your cart, and checkout.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={() => redirectToLogin(navigate, location)}
+            className="btn-primary px-8 py-3 text-sm font-semibold"
+          >
+            Login to Continue
+          </button>
+          <Link to="/products" className="btn-secondary px-8 py-3 text-sm font-semibold">
+            Continue Shopping
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen text-left">

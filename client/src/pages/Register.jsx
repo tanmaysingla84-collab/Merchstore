@@ -2,15 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { registerUser, clearAuthError } from '../features/auth/authSlice';
+import { registerUser, clearAuthError, fetchCurrentUser } from '../features/auth/authSlice';
 import Loader from '../components/Loader';
-
-const GU_DOMAINS = ['@geeta.ac.in', '@geetauniversity.ac.in', '@geetauniversity.edu.in'];
-const isGUEmail  = (val) => GU_DOMAINS.some(d => val.toLowerCase().endsWith(d));
+import {
+  isGUEmail,
+  completePendingCartAction,
+  consumeAuthRedirectPath,
+  getLoginRedirectPath,
+  saveAuthRedirectPath,
+} from '../utils/authRedirect';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -68,7 +72,9 @@ const PasswordRule = ({ met, label }) => (
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { loading, error, token } = useSelector((s) => s.auth);
+  const from = getLoginRedirectPath(location);
 
   const [showPass,        setShowPass]        = useState(false);
   const [showConfirm,     setShowConfirm]     = useState(false);
@@ -84,22 +90,28 @@ const Register = () => {
   const emailValid  = isGUEmail(emailVal) && emailVal.includes('@');
 
   useEffect(() => {
-    if (token) navigate('/dashboard');
+    if (token) {
+      navigate(from, { replace: true });
+    }
     return () => { dispatch(clearAuthError()); };
-  }, [token, navigate, dispatch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     const { name, email, password } = data;
-    dispatch(registerUser({ name, email, password }))
-      .unwrap()
-      .then(() => {
-        toast.success('Welcome to the GU family! 🎓');
-        navigate('/dashboard');
-      })
-      .catch((err) => toast.error(err || 'Registration failed'));
+    try {
+      await dispatch(registerUser({ name, email, password })).unwrap();
+      await dispatch(fetchCurrentUser()).unwrap();
+      await completePendingCartAction(dispatch);
+      toast.success('Welcome to the GU family!');
+      navigate(consumeAuthRedirectPath(from), { replace: true });
+    } catch (err) {
+      toast.error(err || 'Registration failed');
+    }
   };
 
   const handleGoogle = () => {
+    saveAuthRedirectPath(from);
     window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/auth/google`;
   };
 
@@ -349,7 +361,7 @@ const Register = () => {
           {/* Login link */}
           <p className="text-center text-sm text-white/40 mt-8">
             Already have an account?{' '}
-            <Link to="/login" className="text-[#d4af37] font-semibold hover:text-[#f0d060] transition-colors">
+            <Link to="/login" state={{ from: location.state?.from }} className="text-[#d4af37] font-semibold hover:text-[#f0d060] transition-colors">
               Sign In →
             </Link>
           </p>

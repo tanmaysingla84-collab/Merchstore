@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchCurrentUser } from '../features/auth/authSlice';
+import { completePendingCartAction, consumeAuthRedirectPath } from '../utils/authRedirect';
 import Loader from '../components/Loader';
 
 const OAuthSuccess = () => {
@@ -11,23 +12,28 @@ const OAuthSuccess = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
+    const finalizeLogin = async () => {
+      const token = searchParams.get('token');
+      if (!token) {
+        toast.error('Authentication token not found');
+        navigate('/login', { replace: true });
+        return;
+      }
+
       localStorage.setItem('token', token);
-      dispatch(fetchCurrentUser())
-        .unwrap()
-        .then(() => {
-          toast.success('Successfully logged in with Google!');
-          navigate('/dashboard', { replace: true });
-        })
-        .catch((err) => {
-          toast.error(err || 'Failed to fetch user details after Google login');
-          navigate('/login', { replace: true });
-        });
-    } else {
-      toast.error('Authentication token not found');
-      navigate('/login', { replace: true });
-    }
+
+      try {
+        await dispatch(fetchCurrentUser()).unwrap();
+        await completePendingCartAction(dispatch);
+        toast.success('Successfully logged in with Google!');
+        navigate(consumeAuthRedirectPath('/products'), { replace: true });
+      } catch (err) {
+        toast.error(err || 'Failed to fetch user details after Google login');
+        navigate('/login', { replace: true });
+      }
+    };
+
+    finalizeLogin();
   }, [searchParams, navigate, dispatch]);
 
   return (

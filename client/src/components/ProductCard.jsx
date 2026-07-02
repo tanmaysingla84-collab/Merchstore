@@ -1,13 +1,16 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Star, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { addToCart } from '../features/cart/cartSlice';
 import { useAuth } from '../hooks/useAuth';
+import { redirectToLogin } from '../utils/authRedirect';
 
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { isLoggedIn } = useAuth();
   
   const { _id, name, price, images, category, averageRating, sizes } = product;
@@ -20,15 +23,20 @@ const ProductCard = ({ product }) => {
   const handleQuickAdd = (e) => {
     e.preventDefault(); // Prevent navigating to detail page on card click
 
-    if (!isLoggedIn) {
-      toast.error('Please login to add items to your cart.');
-      return;
-    }
-
-    // Default to the first available size in stock
     const availableSize = sizes.find(s => s.stock > 0);
     if (!availableSize) {
       toast.error('This product is currently out of stock.');
+      return;
+    }
+
+    if (!isLoggedIn) {
+      toast.error('Please login to add items to your cart.');
+      redirectToLogin(navigate, location, {
+        productId: _id,
+        qty: 1,
+        size: availableSize.size,
+        productName: name,
+      });
       return;
     }
 

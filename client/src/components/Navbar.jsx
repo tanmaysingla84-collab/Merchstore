@@ -131,10 +131,10 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="flex items-center space-x-3">
-                <Link to="/login" className="px-4.5 py-2 text-sm font-semibold text-brand-maroon-700 hover:text-brand-maroon-600 transition-colors">
+                <Link to="/login" state={{ from: location }} className="px-4.5 py-2 text-sm font-semibold text-brand-maroon-700 hover:text-brand-maroon-600 transition-colors">
                   Login
                 </Link>
-                <Link to="/register" className="px-5 py-2 bg-brand-maroon-700 text-white rounded-xl text-sm font-semibold shadow-premium hover:bg-brand-maroon-600 transition-all duration-300">
+                <Link to="/register" state={{ from: location }} className="px-5 py-2 bg-brand-maroon-700 text-white rounded-xl text-sm font-semibold shadow-premium hover:bg-brand-maroon-600 transition-all duration-300">
                   Register
                 </Link>
               </div>
@@ -211,10 +211,10 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="flex flex-col space-y-2 pt-2 px-3">
-              <Link to="/login" className="w-full text-center py-2.5 border border-brand-maroon-700 text-brand-maroon-700 rounded-xl font-semibold hover:bg-brand-maroon-50 transition-colors">
+              <Link to="/login" state={{ from: location }} className="w-full text-center py-2.5 border border-brand-maroon-700 text-brand-maroon-700 rounded-xl font-semibold hover:bg-brand-maroon-50 transition-colors">
                 Login
               </Link>
-              <Link to="/register" className="w-full text-center py-2.5 bg-brand-maroon-700 text-white rounded-xl font-semibold shadow-premium hover:bg-brand-maroon-600 transition-colors">
+              <Link to="/register" state={{ from: location }} className="w-full text-center py-2.5 bg-brand-maroon-700 text-white rounded-xl font-semibold shadow-premium hover:bg-brand-maroon-600 transition-colors">
                 Register
               </Link>
             </div>

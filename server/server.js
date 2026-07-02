@@ -110,19 +110,48 @@ app.set('io', io);
 // ── 9. Start Server ───────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT, 10) || 5000;
 
+const listenOnAvailablePort = (port, maxRetries = 10) => new Promise((resolve, reject) => {
+  const attemptListen = (currentPort, remainingRetries) => {
+    const onError = (err) => {
+      if (err.code === 'EADDRINUSE' && remainingRetries > 0) {
+        httpServer.removeListener('listening', onListening);
+        httpServer.removeListener('error', onError);
+
+        const nextPort = currentPort + 1;
+        console.warn(`⚠️ Port ${currentPort} is busy, retrying on ${nextPort}...`);
+        attemptListen(nextPort, remainingRetries - 1);
+        return;
+      }
+
+      reject(err);
+    };
+
+    const onListening = () => {
+      httpServer.removeListener('error', onError);
+      resolve(currentPort);
+    };
+
+    httpServer.once('error', onError);
+    httpServer.once('listening', onListening);
+    httpServer.listen(currentPort);
+  };
+
+  attemptListen(port, maxRetries);
+});
+
 const startServer = async () => {
   await connectDB();
 
-  httpServer.listen(PORT, () => {
-    console.log('');
-    console.log('╔════════════════════════════════════════════════╗');
-    console.log(`║  🎓 MerchStore API Server                      ║`);
-    console.log(`║  🚀 Running on http://localhost:${PORT}           ║`);
-    console.log(`║  🌍 Environment: ${(process.env.NODE_ENV || 'development').padEnd(29)}║`);
-    console.log(`║  🔌 WebSocket: Active (Socket.io)              ║`);
-    console.log('╚════════════════════════════════════════════════╝');
-    console.log('');
-  });
+  const activePort = await listenOnAvailablePort(PORT);
+
+  console.log('');
+  console.log('╔════════════════════════════════════════════════╗');
+  console.log(`║  🎓 MerchStore API Server                      ║`);
+  console.log(`║  🚀 Running on http://localhost:${activePort}           ║`);
+  console.log(`║  🌍 Environment: ${(process.env.NODE_ENV || 'development').padEnd(29)}║`);
+  console.log(`║  🔌 WebSocket: Active (Socket.io)              ║`);
+  console.log('╚════════════════════════════════════════════════╝');
+  console.log('');
 
   // Start inventory cron (only in non-test environments)
   if (process.env.NODE_ENV !== 'test') {

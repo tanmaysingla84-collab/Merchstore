@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Star, ShoppingBag, Plus, Minus, ArrowLeft, Heart, Shield, Award, HelpCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fetchProductById, clearSelectedProduct } from '../features/products/productSlice';
 import { addToCart } from '../features/cart/cartSlice';
 import { useAuth } from '../hooks/useAuth';
+import { redirectToLogin } from '../utils/authRedirect';
 import api from '../utils/api';
 import Loader from '../components/Loader';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { isLoggedIn, user } = useAuth();
   
   const { selectedProduct: product, loading, error } = useSelector((state) => state.products);
@@ -96,13 +99,19 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
-    if (!isLoggedIn) {
-      toast.error('Please login to place items in your shopping cart.');
+    if (!selectedSize) {
+      toast.error('Please select a size first.');
       return;
     }
 
-    if (!selectedSize) {
-      toast.error('Please select a size first.');
+    if (!isLoggedIn) {
+      toast.error('Please login to add items to your cart.');
+      redirectToLogin(navigate, location, {
+        productId: product._id,
+        qty,
+        size: selectedSize,
+        productName: product.name,
+      });
       return;
     }
 
@@ -491,7 +500,7 @@ const ProductDetail = () => {
               <div className="border-t border-brand-dark-100 pt-8 text-center py-6 bg-brand-dark-50 rounded-2xl">
                 <p className="font-sans text-sm text-brand-dark-600">
                   You must be{' '}
-                  <Link to="/login" className="font-bold text-brand-maroon-700 hover:underline">logged in</Link>
+                  <Link to="/login" state={{ from: location }} className="font-bold text-brand-maroon-700 hover:underline">logged in</Link>
                   {' '}to write a product review.
                 </p>
               </div>

@@ -1,6 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../utils/api';
 
+const normalizeUser = (user) => {
+  if (!user || typeof user !== 'object') return null;
+
+  const rawId = user._id || user.id;
+  const _id = rawId ? String(rawId) : null;
+
+  return {
+    ...user,
+    ...(_id ? { _id } : {}),
+    addresses: Array.isArray(user.addresses) ? user.addresses : [],
+  };
+};
+
 const normalizeAuthPayload = (payload) => {
   if (!payload || typeof payload !== 'object') {
     return { token: null, user: null };
@@ -10,7 +23,7 @@ const normalizeAuthPayload = (payload) => {
 
   return {
     token: source.token || null,
-    user: source.user || null,
+    user: normalizeUser(source.user),
   };
 };
 
@@ -20,10 +33,13 @@ const normalizeUserPayload = (payload) => {
   }
 
   if (payload.data && typeof payload.data === 'object') {
-    return payload.data;
+    if (payload.data.user) {
+      return normalizeUser(payload.data.user);
+    }
+    return normalizeUser(payload.data);
   }
 
-  return payload.user || null;
+  return normalizeUser(payload.user);
 };
 
 // Async Thunks
@@ -34,7 +50,9 @@ export const registerUser = createAsyncThunk(
       const response = await api.post('/auth/register', userData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+      const errData = error.response?.data;
+      const validationMsg = errData?.errors?.[0]?.message;
+      return rejectWithValue(validationMsg || errData?.message || 'Registration failed');
     }
   }
 );
@@ -46,7 +64,9 @@ export const loginUser = createAsyncThunk(
       const response = await api.post('/auth/login', credentials);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+      const errData = error.response?.data;
+      const validationMsg = errData?.errors?.[0]?.message;
+      return rejectWithValue(validationMsg || errData?.message || 'Login failed');
     }
   }
 );
@@ -152,6 +172,7 @@ const authSlice = createSlice({
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = normalizeUserPayload(action.payload);
+        state.token = localStorage.getItem('token');
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
         state.loading = false;

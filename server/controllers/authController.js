@@ -5,6 +5,16 @@ const User           = require('../models/User');
 const generateToken  = require('../utils/generateToken');
 const { asyncHandler } = require('../middleware/errorHandler');
 
+const formatUserResponse = (user) => ({
+  _id:       user._id,
+  name:      user.name,
+  email:     user.email,
+  role:      user.role,
+  phone:     user.phone || '',
+  avatar:    user.avatar || '',
+  addresses: user.addresses || [],
+});
+
 /**
  * POST /api/auth/register
  * Register a new user locally
@@ -36,14 +46,7 @@ const register = asyncHandler(async (req, res) => {
     message: 'Registration successful',
     data: {
       token,
-      user: {
-        id:    user._id,
-        name:  user.name,
-        email: user.email,
-        role:  user.role,
-        phone: user.phone,
-        avatar: user.avatar,
-      },
+      user: formatUserResponse(user),
     },
   });
 });
@@ -79,14 +82,7 @@ const login = asyncHandler(async (req, res) => {
     message: 'Login successful',
     data: {
       token,
-      user: {
-        id:    user._id,
-        name:  user.name,
-        email: user.email,
-        role:  user.role,
-        phone: user.phone,
-        avatar: user.avatar,
-      },
+      user: formatUserResponse(user),
     },
   });
 });
@@ -99,16 +95,7 @@ const getMe = asyncHandler(async (req, res) => {
   // req.user is attached by protect middleware
   res.status(200).json({
     success: true,
-    data: {
-      id:        req.user._id,
-      name:      req.user.name,
-      email:     req.user.email,
-      role:      req.user.role,
-      phone:     req.user.phone,
-      avatar:    req.user.avatar,
-      addresses: req.user.addresses || [],
-      createdAt: req.user.createdAt,
-    },
+    data: formatUserResponse(req.user),
   });
 });
 
