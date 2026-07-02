@@ -87,7 +87,8 @@ const cartSlice = createSlice({
       })
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload.cart;
+        // Backend returns { success, data: { items, itemCount, subtotal } }
+        state.items = action.payload?.data?.items ?? action.payload?.cart ?? [];
       })
       .addCase(fetchCart.rejected, (state, action) => {
         state.loading = false;

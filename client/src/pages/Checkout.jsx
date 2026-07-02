@@ -26,6 +26,7 @@ const Checkout = () => {
   const navigate = useNavigate();
 
   const { items: cartItems, loading: cartLoading } = useSelector((state) => state.cart);
+  const safeCartItems = Array.isArray(cartItems) ? cartItems : [];
   const { user } = useSelector((state) => state.auth);
   const { activeCoupon, couponError, loading: orderLoading } = useSelector((state) => state.orders);
 
@@ -66,14 +67,14 @@ const Checkout = () => {
     }
   }, [user]);
 
-  // Calculations
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.product?.price || 0) * item.qty, 0);
+  // Calculations - backend returns flat items: { productId, name, price, image, size, qty }
+  const subtotal = safeCartItems.reduce((acc, item) => acc + (item.price || item.product?.price || 0) * item.qty, 0);
   const delivery = subtotal > 1000 ? 0 : 60;
   const discount = activeCoupon ? Math.round(subtotal * (activeCoupon.discountPct / 100)) : 0;
   const total = subtotal + delivery - discount;
 
   // Safeguard redirect if cart empty
-  if (!cartLoading && cartItems.length === 0) {
+  if (!cartLoading && safeCartItems.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <h3 className="font-display font-bold text-xl text-brand-dark-900">Your Cart is Empty</h3>
@@ -129,24 +130,27 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = () => {
-    // Get address text
-    let finalAddressText = '';
-    if (selectedAddressId) {
-      const selected = user.addresses.find(a => a._id === selectedAddressId);
-      if (selected) {
-        finalAddressText = `${selected.street}, ${selected.city}, ${selected.state} - ${selected.pincode}`;
-      }
-    }
-
-    if (!finalAddressText) {
+    if (!selectedAddressId || !user?.addresses?.length) {
       toast.error('Shipping address details missing.');
       return;
     }
 
     const orderPayload = {
-      address: finalAddressText,
+      addressId: selectedAddressId,
       paymentMethod,
       couponCode: activeCoupon?.code || null,
+    };
+
+    const navigateToConfirmation = (res) => {
+      const orderId =
+        res?.data?.orderId ||
+        res?.data?.order?._id ||
+        res?.order?._id;
+      if (!orderId) {
+        toast.error('Order placed but confirmation page could not be loaded.');
+        return;
+      }
+      navigate(`/order-confirm/${orderId}`);
     };
 
     if (paymentMethod === 'stripe') {
@@ -164,7 +168,7 @@ const Checkout = () => {
           .then((res) => {
             setIsProcessingPayment(false);
             toast.success('Payment authorized! Order placed.');
-            navigate(`/order-confirm/${res.order._id}`);
+            navigateToConfirmation(res);
           })
           .catch((err) => {
             setIsProcessingPayment(false);
@@ -177,7 +181,7 @@ const Checkout = () => {
         .unwrap()
         .then((res) => {
           toast.success('Order placed successfully (COD)');
-          navigate(`/order-confirm/${res.order._id}`);
+          navigateToConfirmation(res);
         })
         .catch((err) => {
           toast.error(err || 'Order processing failed');
@@ -567,14 +571,14 @@ const Checkout = () => {
               <div className="space-y-4">
                 <h3 className="font-sans font-bold text-xs uppercase tracking-wider text-brand-dark-750">Items List</h3>
                 <div className="divide-y divide-brand-dark-100">
-                  {cartItems.map((item, idx) => (
+                {safeCartItems.map((item, idx) => (
                     <div key={idx} className="py-3 flex justify-between items-center text-sm font-sans">
                       <div className="flex items-center gap-3">
-                        <span className="font-bold text-brand-dark-900">{item.product?.name}</span>
+                        <span className="font-bold text-brand-dark-900">{item.name || item.product?.name}</span>
                         <span className="text-xs text-brand-dark-500">({item.size})</span>
                       </div>
                       <span className="font-semibold text-brand-dark-600">
-                        {item.qty} × ₹{item.product?.price}
+                        {item.qty} × ₹{item.price || item.product?.price}
                       </span>
                     </div>
                   ))}

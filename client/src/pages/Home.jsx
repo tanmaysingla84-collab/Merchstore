@@ -9,6 +9,7 @@ import Loader from '../components/Loader';
 const Home = () => {
   const dispatch = useDispatch();
   const { items: products, loading } = useSelector((state) => state.products);
+  const safeProducts = Array.isArray(products) ? products : [];
 
   useEffect(() => {
     // Fetch products on mount
@@ -16,7 +17,7 @@ const Home = () => {
   }, [dispatch]);
 
   // Featured products
-  const featuredProducts = products.filter(p => p.isFeatured).slice(0, 4);
+  const featuredProducts = safeProducts.filter(p => p.isFeatured).slice(0, 4);
 
   const categories = [
     {

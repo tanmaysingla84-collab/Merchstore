@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Base Axios Instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -250,7 +250,7 @@ const simulateRequest = (handler, delay = 500) => {
 };
 
 // INTERCEPT AXIOS CLIENT CALLS TO HANDLE FRONTEND INTERACTIVELY WITHOUT A BACKEND
-const useMock = true; // Toggle this if actual server is deployed
+const useMock = false; // Toggle this if actual server is deployed
 
 if (useMock) {
   api.interceptors.request.use((config) => {

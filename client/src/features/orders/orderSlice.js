@@ -11,7 +11,9 @@ export const createOrder = createAsyncThunk(
       dispatch(clearCartLocal()); // Clear local Redux cart
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to place order');
+      const errData = error.response?.data;
+      const validationMsg = errData?.errors?.[0]?.message;
+      return rejectWithValue(validationMsg || errData?.message || 'Failed to place order');
     }
   }
 );
@@ -21,7 +23,9 @@ export const validateCoupon = createAsyncThunk(
   async (code, { rejectWithValue }) => {
     try {
       const response = await api.post('/coupons/validate', { code });
-      return { code, discountPct: response.data.discountPct };
+      // Backend returns { success, data: { code, discountPct, discountAmount, ... } }
+      const payload = response.data?.data || response.data;
+      return { code, discountPct: payload.discountPct };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Invalid coupon code');
     }
@@ -30,9 +34,14 @@ export const validateCoupon = createAsyncThunk(
 
 export const fetchUserOrders = createAsyncThunk(
   'orders/fetchAll',
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
-      const response = await api.get('/orders');
+      const userId = getState().auth.user?._id;
+      if (!userId) {
+        return rejectWithValue('Not authenticated');
+      }
+
+      const response = await api.get(`/orders/${userId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to load order history');
@@ -86,9 +95,10 @@ const orderSlice = createSlice({
       })
       .addCase(createOrder.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentOrder = action.payload.order;
+        const data = action.payload?.data;
+        state.currentOrder = data?.order ?? (data?._id ? data : null) ?? action.payload?.order ?? null;
         state.success = true;
-        state.activeCoupon = null; // Reset coupon after purchase
+        state.activeCoupon = null;
       })
       .addCase(createOrder.rejected, (state, action) => {
         state.loading = false;
@@ -114,7 +124,9 @@ const orderSlice = createSlice({
       })
       .addCase(fetchUserOrders.fulfilled, (state, action) => {
         state.loading = false;
-        state.list = action.payload.orders;
+        // Backend returns { success, data: [...orders] }
+        const raw = action.payload?.data;
+        state.list = Array.isArray(raw) ? raw : (action.payload?.orders ?? []);
       })
       .addCase(fetchUserOrders.rejected, (state, action) => {
         state.loading = false;
@@ -127,7 +139,8 @@ const orderSlice = createSlice({
       })
       .addCase(fetchOrderById.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentOrder = action.payload.order;
+        const data = action.payload?.data;
+        state.currentOrder = data?.order ?? (data?._id ? data : null) ?? action.payload?.order ?? null;
       })
       .addCase(fetchOrderById.rejected, (state, action) => {
         state.loading = false;

@@ -1,6 +1,31 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../utils/api';
 
+const normalizeAuthPayload = (payload) => {
+  if (!payload || typeof payload !== 'object') {
+    return { token: null, user: null };
+  }
+
+  const source = payload.data && typeof payload.data === 'object' ? payload.data : payload;
+
+  return {
+    token: source.token || null,
+    user: source.user || null,
+  };
+};
+
+const normalizeUserPayload = (payload) => {
+  if (!payload || typeof payload !== 'object') {
+    return null;
+  }
+
+  if (payload.data && typeof payload.data === 'object') {
+    return payload.data;
+  }
+
+  return payload.user || null;
+};
+
 // Async Thunks
 export const registerUser = createAsyncThunk(
   'auth/register',
@@ -86,11 +111,14 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
+        const { token, user } = normalizeAuthPayload(action.payload);
         state.loading = false;
-        state.token = action.payload.token;
-        state.user = action.payload.user;
+        state.token = token;
+        state.user = user;
         state.success = true;
-        localStorage.setItem('token', action.payload.token);
+        if (token) {
+          localStorage.setItem('token', token);
+        }
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -103,11 +131,14 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
+        const { token, user } = normalizeAuthPayload(action.payload);
         state.loading = false;
-        state.token = action.payload.token;
-        state.user = action.payload.user;
+        state.token = token;
+        state.user = user;
         state.success = true;
-        localStorage.setItem('token', action.payload.token);
+        if (token) {
+          localStorage.setItem('token', token);
+        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -120,7 +151,7 @@ const authSlice = createSlice({
       })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        state.user = normalizeUserPayload(action.payload);
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
         state.loading = false;
@@ -132,7 +163,8 @@ const authSlice = createSlice({
       // Add Address
       .addCase(addAddress.fulfilled, (state, action) => {
         if (state.user) {
-          state.user.addresses = action.payload.addresses;
+          // Backend returns { success, data: { addresses } }
+          state.user.addresses = action.payload.addresses || action.payload.data?.addresses || [];
         }
       });
   },

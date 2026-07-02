@@ -1,6 +1,30 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../utils/api';
 
+const normalizeProductsPayload = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== 'object') return [];
+
+  if (Array.isArray(payload.data)) return payload.data;
+  if (Array.isArray(payload.products)) return payload.products;
+
+  return [];
+};
+
+const normalizeProductPayload = (payload) => {
+  if (!payload || typeof payload !== 'object') return null;
+
+  if (payload.data && typeof payload.data === 'object' && !Array.isArray(payload.data)) {
+    return payload.data;
+  }
+
+  if (payload.product && typeof payload.product === 'object' && !Array.isArray(payload.product)) {
+    return payload.product;
+  }
+
+  return null;
+};
+
 // Async Thunks
 export const fetchProducts = createAsyncThunk(
   'products/fetchAll',
@@ -64,7 +88,7 @@ const productSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload.products;
+        state.items = normalizeProductsPayload(action.payload);
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
@@ -78,7 +102,7 @@ const productSlice = createSlice({
       })
       .addCase(fetchProductById.fulfilled, (state, action) => {
         state.loading = false;
-        state.selectedProduct = action.payload.product;
+        state.selectedProduct = normalizeProductPayload(action.payload);
       })
       .addCase(fetchProductById.rejected, (state, action) => {
         state.loading = false;

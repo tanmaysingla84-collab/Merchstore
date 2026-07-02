@@ -50,9 +50,10 @@ const OrderConfirm = () => {
   ];
 
   const getStepStatus = (stepTitle) => {
-    const statuses = ['Placed', 'Packed', 'Shipped', 'Delivered'];
-    const currentIdx = statuses.indexOf(localStatus || order.status);
-    const stepIdx = statuses.indexOf(stepTitle);
+    const statuses = ['placed', 'packed', 'shipped', 'delivered'];
+    const currentStatus = (localStatus || order.status || '').toLowerCase();
+    const currentIdx = statuses.indexOf(currentStatus);
+    const stepIdx = statuses.indexOf(stepTitle.toLowerCase());
 
     if (stepIdx < currentIdx) return 'completed';
     if (stepIdx === currentIdx) return 'active';

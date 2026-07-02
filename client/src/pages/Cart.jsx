@@ -10,23 +10,22 @@ const Cart = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { items: cartItems, loading } = useSelector((state) => state.cart);
+  const safeCartItems = Array.isArray(cartItems) ? cartItems : [];
 
   useEffect(() => {
     dispatch(fetchCart());
   }, [dispatch]);
 
-  // Calculations
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.product?.price || 0) * item.qty, 0);
-  const totalItemsCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
-  const estimatedDelivery = subtotal > 1000 ? 0 : 60; // Free delivery above 1000 INR
+  // Calculations - backend returns flat items: { productId, name, price, image, size, qty, stock }
+  const subtotal = safeCartItems.reduce((acc, item) => acc + (item.price || 0) * item.qty, 0);
+  const totalItemsCount = safeCartItems.reduce((acc, item) => acc + item.qty, 0);
+  const estimatedDelivery = subtotal > 1000 ? 0 : 60;
 
   const handleQtyChange = (item, newQty) => {
     if (newQty < 1) return;
-
     // Check stock limit for that product size
-    const sizeObj = item.product?.sizes?.find(s => s.size === item.size);
-    if (sizeObj && newQty > sizeObj.stock) {
-      toast.error(`Sorry, only ${sizeObj.stock} units available in size ${item.size}.`);
+    if (item.stock !== undefined && newQty > item.stock) {
+      toast.error(`Sorry, only ${item.stock} units available in size ${item.size}.`);
       return;
     }
 
@@ -53,13 +52,13 @@ const Cart = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen text-left">
-      {loading && cartItems.length === 0 && <Loader fullScreen />}
+      {loading && safeCartItems.length === 0 && <Loader fullScreen />}
 
       <h1 className="font-display font-extrabold text-3xl text-brand-dark-900 tracking-tight mb-8">
         Your Shopping Cart
       </h1>
 
-      {cartItems.length === 0 ? (
+      {safeCartItems.length === 0 ? (
         /* Empty Cart State */
         <div className="bg-white border border-brand-dark-100 rounded-3xl p-12 text-center shadow-premium max-w-xl mx-auto my-10 space-y-6">
           <div className="p-4 bg-brand-maroon-50 text-brand-maroon-700 rounded-2xl inline-block">
@@ -81,7 +80,7 @@ const Cart = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* LEFT: CART ITEMS LIST (lg:col-span-8) */}
           <div className="lg:col-span-8 space-y-4">
-            {cartItems.map((item) => (
+            {safeCartItems.map((item) => (
               <div 
                 key={`${item.productId}-${item.size}`}
                 className="bg-white border border-brand-dark-100 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row items-center gap-5"
@@ -89,8 +88,8 @@ const Cart = () => {
                 {/* Product Thumbnail */}
                 <div className="w-20 h-25 rounded-xl bg-brand-dark-50 border border-brand-dark-200 overflow-hidden shrink-0">
                   <img 
-                    src={item.product?.images?.[0]} 
-                    alt={item.product?.name} 
+                    src={item.image || item.product?.images?.[0]} 
+                    alt={item.name || item.product?.name} 
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -98,13 +97,13 @@ const Cart = () => {
                 {/* Info details */}
                 <div className="flex-grow text-center sm:text-left space-y-1.5 min-w-0">
                   <h3 className="font-display font-bold text-sm text-brand-dark-900 hover:text-brand-maroon-700 transition-colors truncate">
-                    <Link to={`/products/${item.productId}`}>{item.product?.name}</Link>
+                    <Link to={`/products/${item.productId}`}>{item.name || item.product?.name}</Link>
                   </h3>
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3.5 text-xs text-brand-dark-500 font-semibold font-sans">
                     <span className="bg-brand-dark-50 border border-brand-dark-200 px-2 py-0.5 rounded">
                       Size: {item.size}
                     </span>
-                    <span>₹{item.product?.price?.toLocaleString('en-IN')}.00 each</span>
+                    <span>₹{(item.price || item.product?.price || 0).toLocaleString('en-IN')}.00 each</span>
                   </div>
                 </div>
 
@@ -132,7 +131,7 @@ const Cart = () => {
 
                   {/* Total Item Price */}
                   <span className="font-sans font-bold text-sm text-brand-dark-900 min-w-20 text-right">
-                    ₹{((item.product?.price || 0) * item.qty).toLocaleString('en-IN')}.00
+                    ₹{((item.price || item.product?.price || 0) * item.qty).toLocaleString('en-IN')}.00
                   </span>
 
                   {/* Trash Bin button */}

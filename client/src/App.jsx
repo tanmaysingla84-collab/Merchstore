@@ -18,6 +18,7 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderConfirm from './pages/OrderConfirm';
 import UserDashboard from './pages/UserDashboard';
+import OAuthSuccess from './pages/OAuthSuccess';
 
 // State Actions
 import { fetchCurrentUser } from './features/auth/authSlice';
@@ -69,6 +70,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/oauth-success" element={<OAuthSuccess />} />
             <Route path="/products" element={<ProductList />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />

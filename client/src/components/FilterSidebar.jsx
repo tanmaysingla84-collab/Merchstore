@@ -7,7 +7,8 @@ const FilterSidebar = ({ filters, onFilterChange, onReset, onClose }) => {
     { name: 'Varsity Hoodies', value: 'hoodies' },
     { name: 'Heritage Tees', value: 'tshirts' },
     { name: 'Crewneck Sweatshirts', value: 'sweatshirts' },
-    { name: 'Academic Accessories', value: 'accessories' }
+    { name: 'Academic Accessories', value: 'accessories' },
+    { name: 'University Stationery', value: 'stationery' }
   ];
 
   const sizes = ['S', 'M', 'L', 'XL', 'One Size', 'Standard'];

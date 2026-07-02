@@ -10,6 +10,7 @@ const ProductList = () => {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const { items: products, loading, filters } = useSelector((state) => state.products);
+  const safeProducts = Array.isArray(products) ? products : [];
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // 1. Sync URL query parameters to Redux state on load
@@ -86,7 +87,7 @@ const ProductList = () => {
                 Filter
               </button>
               <span className="font-sans text-xs text-brand-dark-500 font-semibold hidden sm:inline">
-                Showing {products.length} {products.length === 1 ? 'Product' : 'Products'}
+                Showing {safeProducts.length} {safeProducts.length === 1 ? 'Product' : 'Products'}
               </span>
             </div>
 
@@ -119,7 +120,7 @@ const ProductList = () => {
                 </div>
               ))}
             </div>
-          ) : products.length === 0 ? (
+          ) : safeProducts.length === 0 ? (
             /* Empty State */
             <div className="flex flex-col items-center justify-center py-20 px-4 bg-white border border-brand-dark-100 rounded-2xl shadow-sm text-center">
               <div className="p-4 bg-brand-maroon-50 text-brand-maroon-700 rounded-2xl mb-4">
@@ -140,7 +141,7 @@ const ProductList = () => {
           ) : (
             /* Products Grid display */
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              {products.map((product) => (
+              {safeProducts.map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}
             </div>
