@@ -83,7 +83,17 @@ const orderSlice = createSlice({
     clearCoupon: (state) => {
       state.activeCoupon = null;
       state.couponError = null;
-    }
+    },
+    updateOrderStatusInList: (state, action) => {
+      const { orderId, status } = action.payload;
+      const order = state.list.find((o) => o._id === orderId);
+      if (order) {
+        order.status = status;
+      }
+      if (state.currentOrder?._id === orderId) {
+        state.currentOrder.status = status;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -149,5 +159,5 @@ const orderSlice = createSlice({
   }
 });
 
-export const { clearOrderState, clearCoupon } = orderSlice.actions;
+export const { clearOrderState, clearCoupon, updateOrderStatusInList } = orderSlice.actions;
 export default orderSlice.reducer;

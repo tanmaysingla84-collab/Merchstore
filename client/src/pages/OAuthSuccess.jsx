@@ -23,10 +23,16 @@ const OAuthSuccess = () => {
       localStorage.setItem('token', token);
 
       try {
-        await dispatch(fetchCurrentUser()).unwrap();
+        const result = await dispatch(fetchCurrentUser()).unwrap();
+        const role = result?.data?.role;
         await completePendingCartAction(dispatch);
         toast.success('Successfully logged in with Google!');
-        navigate(consumeAuthRedirectPath('/products'), { replace: true });
+
+        if (role === 'admin') {
+          navigate('/admin/analytics', { replace: true });
+        } else {
+          navigate(consumeAuthRedirectPath('/products'), { replace: true });
+        }
       } catch (err) {
         toast.error(err || 'Failed to fetch user details after Google login');
         navigate('/login', { replace: true });

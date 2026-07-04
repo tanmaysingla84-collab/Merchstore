@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 
 export const useSocket = (orderId, onStatusUpdate) => {
@@ -7,49 +8,44 @@ export const useSocket = (orderId, onStatusUpdate) => {
   useEffect(() => {
     if (!orderId) return;
 
-    setIsConnected(true);
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
     
-    // Simulate incoming WebSocket events from backend using a local interval
-    // This allows the user to see the status bar updating live in front of their eyes!
-    const statuses = ['Placed', 'Packed', 'Shipped', 'Delivered'];
-    
-    const interval = setInterval(() => {
-      // Get current order from localstorage to find its current status index
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-      const orderIdx = orders.findIndex(o => o._id === orderId);
-      
-      if (orderIdx > -1) {
-        const order = orders[orderIdx];
-        const currentStatusIdx = statuses.indexOf(order.status);
-        
-        if (currentStatusIdx < statuses.length - 1) {
-          const nextStatus = statuses[currentStatusIdx + 1];
-          order.status = nextStatus;
-          orders[orderIdx] = order;
-          localStorage.setItem('orders', JSON.stringify(orders));
-          
-          // Emit socket-like callback
-          onStatusUpdate({
-            orderId,
-            status: nextStatus,
-            timestamp: new Date().toISOString()
-          });
+    // Connect to the socket server
+    const socket = io(socketUrl, {
+      transports: ['websocket', 'polling'],
+      withCredentials: true
+    });
 
-          toast.success(`Order status updated to: ${nextStatus}!`, {
-            icon: '📦',
-            duration: 4000
-          });
-        } else {
-          clearInterval(interval);
-        }
+    socket.on('connect', () => {
+      setIsConnected(true);
+      console.log(`🔌 Connected to socket server: ${socket.id}`);
+      // Join the order room
+      socket.emit('JOIN_ORDER', { orderId });
+    });
+
+    socket.on('disconnect', () => {
+      setIsConnected(false);
+      console.log('🔌 Disconnected from socket server');
+    });
+
+    // Listen to status updates from backend
+    socket.on('ORDER_STATUS_UPDATED', (payload) => {
+      console.log('📡 Received ORDER_STATUS_UPDATED:', payload);
+      if (payload.orderId === orderId) {
+        onStatusUpdate(payload);
+        toast.success(`Order status updated to: ${payload.status}!`, {
+          icon: '📦',
+          duration: 4000
+        });
       }
-    }, 15000); // Progresses every 15 seconds for rapid testing demonstration
+    });
 
     return () => {
-      clearInterval(interval);
+      socket.emit('LEAVE_ORDER', { orderId });
+      socket.disconnect();
       setIsConnected(false);
     };
-  }, [orderId]);
+  }, [orderId, onStatusUpdate]);
 
   return { isConnected };
 };

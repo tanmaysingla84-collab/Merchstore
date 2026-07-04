@@ -27,7 +27,10 @@ const getProducts = asyncHandler(async (req, res) => {
   const skip     = (pageNum - 1) * limitNum;
 
   // Build filter object (only fetch active products by default for public)
-  const filter = { isActive: true };
+  const filter = {};
+  if (req.query.includeInactive !== 'true') {
+    filter.isActive = true;
+  }
 
   if (category && category !== 'all') {
     filter.category = category;

@@ -117,11 +117,11 @@ const Navbar = () => {
                       <p className="font-sans text-xs text-brand-dark-500 truncate">{user?.email}</p>
                     </div>
                     <Link 
-                      to="/dashboard" 
+                      to={user?.role === 'admin' ? '/admin/analytics' : '/dashboard'} 
                       className="flex items-center gap-2 px-4 py-2 text-sm text-brand-dark-700 hover:bg-brand-maroon-50 hover:text-brand-maroon-700 transition-colors"
                     >
                       <LayoutDashboard className="w-4 h-4" />
-                      Dashboard
+                      {user?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
                     </Link>
                     <button 
                       onClick={handleLogoutClick}
@@ -199,11 +199,11 @@ const Navbar = () => {
                 </div>
               </div>
               <Link 
-                to="/dashboard" 
+                to={user?.role === 'admin' ? '/admin/analytics' : '/dashboard'} 
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-sans font-medium text-brand-dark-700 hover:bg-brand-dark-50"
               >
                 <LayoutDashboard className="w-5 h-5 text-brand-dark-500" />
-                Dashboard
+                {user?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
               </Link>
               <button 
                 onClick={handleLogoutClick}
