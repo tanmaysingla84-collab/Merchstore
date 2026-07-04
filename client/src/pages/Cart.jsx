@@ -87,12 +87,20 @@ const Cart = () => {
                 className="bg-white border border-brand-dark-100 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row items-center gap-5"
               >
                 {/* Product Thumbnail */}
-                <div className="w-20 h-25 rounded-xl bg-brand-dark-50 border border-brand-dark-200 overflow-hidden shrink-0">
+                <div className="w-20 h-25 rounded-xl bg-brand-dark-50 border border-brand-dark-200 overflow-hidden shrink-0 relative">
                   <img 
                     src={item.product?.images?.[0]} 
                     alt={item.product?.name} 
                     className="w-full h-full object-cover"
                   />
+                  {/* University logo watermark */}
+                  <div className="absolute bottom-1 left-1 z-10 p-0.5 bg-white rounded shadow-xs border border-brand-dark-100/50 w-8 h-8 flex items-center justify-center pointer-events-none select-none">
+                    <img 
+                      src="/logo.png" 
+                      alt="GU Logo" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                 </div>
 
                 {/* Info details */}

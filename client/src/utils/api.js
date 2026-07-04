@@ -516,7 +516,7 @@ if (useMock) {
           const user = getLoggedUser();
           if (!user) return { error: 'Login required', status: 401 };
 
-          const { address, paymentMethod, couponCode } = data;
+          const { address, paymentMethod, couponCode, upiTxnId } = data;
           const cartKey = `cart_${user.email}`;
           const cartItems = JSON.parse(localStorage.getItem(cartKey) || '[]');
           if (cartItems.length === 0) return { error: 'Cart is empty' };
@@ -580,6 +580,7 @@ if (useMock) {
             paymentStatus: paymentMethod === 'stripe' ? 'paid' : 'pending',
             status: 'Placed',
             address,
+            upiTxnId,
             createdAt: new Date().toISOString()
           };
           orders.push(newOrder);

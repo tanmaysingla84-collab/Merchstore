@@ -140,8 +140,16 @@ const OrderConfirm = () => {
           <div className="divide-y divide-brand-dark-100">
             {order.items?.map((item, idx) => (
               <div key={idx} className="py-4 flex gap-4 items-center">
-                <div className="w-12 h-15 rounded-lg overflow-hidden border border-brand-dark-200 shrink-0 bg-brand-dark-50">
+                <div className="w-12 h-15 rounded-lg overflow-hidden border border-brand-dark-200 shrink-0 bg-brand-dark-50 relative">
                   <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  {/* University logo watermark */}
+                  <div className="absolute bottom-0.5 left-0.5 z-10 p-0.5 bg-white rounded-sm shadow-xs border border-brand-dark-100/50 w-7 h-7 flex items-center justify-center pointer-events-none select-none">
+                    <img 
+                      src="/logo.png" 
+                      alt="GU Logo" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                 </div>
                 <div className="flex-grow">
                   <h4 className="font-display font-bold text-sm text-brand-dark-900">{item.name}</h4>
@@ -166,13 +174,22 @@ const OrderConfirm = () => {
             </div>
             <div className="space-y-1 text-right">
               <span className="font-bold uppercase tracking-wider text-brand-dark-400">Payment Status</span>
-              <p className="text-brand-dark-800 font-bold capitalize">
+              <div className="text-brand-dark-800 font-bold capitalize space-y-1 flex flex-col items-end">
                 {order.paymentMethod === 'stripe' ? (
                   <span className="text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">Paid (Stripe)</span>
+                ) : order.paymentMethod === 'upi' ? (
+                  <>
+                    <span className="text-brand-gold-800 bg-brand-gold-50 px-2 py-0.5 rounded border border-brand-gold-200">UPI (Pending Verification)</span>
+                    {order.upiTxnId && (
+                      <span className="text-[10px] text-brand-dark-500 lowercase font-mono">
+                        Ref: {order.upiTxnId}
+                      </span>
+                    )}
+                  </>
                 ) : (
                   <span className="text-brand-gold-800 bg-brand-gold-50 px-2 py-0.5 rounded border border-brand-gold-200">COD (Pending)</span>
                 )}
-              </p>
+              </div>
             </div>
           </div>
         </div>

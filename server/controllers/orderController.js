@@ -15,10 +15,19 @@ const createOrder = async (req, res) => {
   if (session) session.startTransaction();
 
   try {
-    const { address, paymentMethod, couponCode } = req.body;
+    const { address, paymentMethod, couponCode, upiTxnId } = req.body;
 
     if (!address || !paymentMethod) {
       return res.status(400).json({ success: false, message: 'Address and Payment Method are required' });
+    }
+
+    if (paymentMethod === 'upi') {
+      if (!upiTxnId) {
+        return res.status(400).json({ success: false, message: 'UPI Transaction ID is required' });
+      }
+      if (!/^\d{12}$/.test(upiTxnId)) {
+        return res.status(400).json({ success: false, message: 'UPI Transaction ID must be exactly 12 digits' });
+      }
     }
 
     // 1. Get user cart
@@ -118,7 +127,8 @@ const createOrder = async (req, res) => {
       paymentStatus: initialPaymentStatus,
       status: 'Placed',
       address,
-      stripePaymentIntentId
+      stripePaymentIntentId,
+      upiTxnId
     });
 
     await order.save({ session: session ? session : null });

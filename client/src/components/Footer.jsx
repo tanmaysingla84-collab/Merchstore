@@ -45,9 +45,13 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Column 1: Branding */}
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-brand-maroon-700 flex items-center justify-center text-white">
-                <span className="font-display font-bold text-sm text-brand-gold-300">GU</span>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 flex items-center justify-center">
+                <img 
+                  src="/logo.png" 
+                  alt="Geeta University Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <span className="font-display font-bold text-lg text-white leading-none">
                 GEETA UNIVERSITY

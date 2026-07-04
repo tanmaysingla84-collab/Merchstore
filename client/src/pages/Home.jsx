@@ -98,6 +98,14 @@ const Home = () => {
                     alt="GU Varsity Hoodie Preview" 
                     className="w-full h-full object-cover opacity-90 hover:scale-105 transition-transform duration-700"
                   />
+                  {/* University logo watermark */}
+                  <div className="absolute top-4 left-4 z-10 w-18 h-18 pointer-events-none select-none">
+                    <img 
+                      src="/logo.png" 
+                      alt="GU Logo" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                   {/* Floating badge */}
                   <div className="absolute bottom-6 left-6 right-6 p-4 glass-panel-dark rounded-xl flex items-center justify-between">
                     <div>

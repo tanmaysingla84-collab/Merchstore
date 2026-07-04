@@ -40,13 +40,17 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-40 w-full transition-all duration-300 bg-white/80 backdrop-blur-md border-b border-brand-dark-100 shadow-glass">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20">
+        <div className="flex justify-between h-24">
           {/* Logo and Brand */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2.5 group">
-              {/* Gold seal seal emblem */}
-              <div className="w-10 h-10 rounded-xl bg-brand-maroon-700 flex items-center justify-center text-white shadow-premium group-hover:bg-brand-maroon-600 transition-colors">
-                <span className="font-display font-bold text-lg text-brand-gold-300">GU</span>
+              {/* Gold seal emblem */}
+              <div className="w-20 h-20 flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+                <img 
+                  src="/logo.png" 
+                  alt="Geeta University Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="font-display font-bold text-xl text-brand-maroon-700 leading-none tracking-tight group-hover:text-brand-maroon-600 transition-colors">

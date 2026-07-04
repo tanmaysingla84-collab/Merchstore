@@ -72,6 +72,14 @@ const ProductCard = ({ product }) => {
           loading="lazy"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
+        {/* University logo watermark */}
+        <div className="absolute bottom-3 left-3 z-10 w-14 h-14 pointer-events-none select-none">
+          <img 
+            src="/logo.png" 
+            alt="GU Logo" 
+            className="w-full h-full object-contain"
+          />
+        </div>
         
         {/* Quick Add Overlay Button */}
         {!isOutOfStock && (

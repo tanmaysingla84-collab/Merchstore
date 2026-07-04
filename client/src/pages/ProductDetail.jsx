@@ -160,6 +160,14 @@ const ProductDetail = () => {
               alt={product.name} 
               className="w-full h-full object-cover"
             />
+            {/* University logo watermark */}
+            <div className="absolute bottom-5 left-5 z-10 w-24 h-24 pointer-events-none select-none">
+              <img 
+                src="/logo.png" 
+                alt="GU Logo" 
+                className="w-full h-full object-contain"
+              />
+            </div>
           </div>
 
           {/* Thumbnails list */}

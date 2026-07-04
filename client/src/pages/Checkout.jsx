@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Check, CreditCard, ShoppingBag, MapPin, Tag, Landmark, Loader2, ArrowRight } from 'lucide-react';
+import { Check, CreditCard, ShoppingBag, MapPin, Tag, Landmark, Loader2, ArrowRight, QrCode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fetchCart } from '../features/cart/cartSlice';
 import { createOrder, validateCoupon, clearCoupon } from '../features/orders/orderSlice';
@@ -32,13 +32,14 @@ const Checkout = () => {
   const [step, setStep] = useState(1); // Steps: 1 (Shipping), 2 (Payment), 3 (Review & Order)
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [newAddressOpen, setNewAddressOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('stripe'); // 'stripe' or 'cod'
+  const [paymentMethod, setPaymentMethod] = useState('stripe'); // 'stripe' or 'cod' or 'upi'
   const [couponCode, setCouponCode] = useState('');
   
   // Simulated Card Payment form states
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvc, setCardCvc] = useState('');
+  const [upiTxnId, setUpiTxnId] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const {
@@ -164,6 +165,28 @@ const Checkout = () => {
           .then((res) => {
             setIsProcessingPayment(false);
             toast.success('Payment authorized! Order placed.');
+            navigate(`/order-confirm/${res.order._id}`);
+          })
+          .catch((err) => {
+            setIsProcessingPayment(false);
+            toast.error(err || 'Order processing failed');
+          });
+      }, 1500);
+    } else if (paymentMethod === 'upi') {
+      if (!upiTxnId || !/^\d{12}$/.test(upiTxnId)) {
+        toast.error('Please enter a valid 12-digit UPI Transaction ID.');
+        return;
+      }
+      orderPayload.upiTxnId = upiTxnId;
+      setIsProcessingPayment(true);
+
+      // Simulate UPI reference check
+      setTimeout(() => {
+        dispatch(createOrder(orderPayload))
+          .unwrap()
+          .then((res) => {
+            setIsProcessingPayment(false);
+            toast.success('UPI Reference submitted! Order placed.');
             navigate(`/order-confirm/${res.order._id}`);
           })
           .catch((err) => {
@@ -428,11 +451,11 @@ const Checkout = () => {
                 Select Payment Mode
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Stripe Credit Card selection */}
                 <div 
                   onClick={() => setPaymentMethod('stripe')}
-                  className={`p-5 border rounded-2xl cursor-pointer flex items-start gap-4 transition-all ${
+                  className={`p-5 border rounded-2xl cursor-pointer flex flex-col justify-between items-start gap-4 transition-all ${
                     paymentMethod === 'stripe' 
                       ? 'border-brand-maroon-700 bg-brand-maroon-50/10 ring-2 ring-brand-maroon-600/20' 
                       : 'border-brand-dark-200 hover:border-brand-dark-400'
@@ -443,14 +466,32 @@ const Checkout = () => {
                   </div>
                   <div className="text-left">
                     <h3 className="font-display font-bold text-sm text-brand-dark-900">Online Card (Stripe)</h3>
-                    <p className="font-sans text-xs text-brand-dark-500 mt-1">Instant secure authorization via credit/debit card.</p>
+                    <p className="font-sans text-[11px] text-brand-dark-500 mt-1">Instant secure authorization via credit/debit card.</p>
+                  </div>
+                </div>
+
+                {/* UPI selection */}
+                <div 
+                  onClick={() => setPaymentMethod('upi')}
+                  className={`p-5 border rounded-2xl cursor-pointer flex flex-col justify-between items-start gap-4 transition-all ${
+                    paymentMethod === 'upi' 
+                      ? 'border-brand-maroon-700 bg-brand-maroon-50/10 ring-2 ring-brand-maroon-600/20' 
+                      : 'border-brand-dark-200 hover:border-brand-dark-400'
+                  }`}
+                >
+                  <div className="p-2.5 bg-brand-maroon-50 text-brand-maroon-700 rounded-xl mt-0.5">
+                    <QrCode className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-display font-bold text-sm text-brand-dark-900">UPI (QR Code)</h3>
+                    <p className="font-sans text-[11px] text-brand-dark-500 mt-1">Scan QR code using GPay, PhonePe, or Paytm.</p>
                   </div>
                 </div>
 
                 {/* COD selection */}
                 <div 
                   onClick={() => setPaymentMethod('cod')}
-                  className={`p-5 border rounded-2xl cursor-pointer flex items-start gap-4 transition-all ${
+                  className={`p-5 border rounded-2xl cursor-pointer flex flex-col justify-between items-start gap-4 transition-all ${
                     paymentMethod === 'cod' 
                       ? 'border-brand-maroon-700 bg-brand-maroon-50/10 ring-2 ring-brand-maroon-600/20' 
                       : 'border-brand-dark-200 hover:border-brand-dark-400'
@@ -460,8 +501,8 @@ const Checkout = () => {
                     <Landmark className="w-5 h-5" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-display font-bold text-sm text-brand-dark-900">Cash on Collection (COD)</h3>
-                    <p className="font-sans text-xs text-brand-dark-500 mt-1">Pay when collecting merchandise at the Campus counter.</p>
+                    <h3 className="font-display font-bold text-sm text-brand-dark-900">Collection (COD)</h3>
+                    <p className="font-sans text-[11px] text-brand-dark-500 mt-1">Pay cash when collecting items at the counter.</p>
                   </div>
                 </div>
               </div>
@@ -503,6 +544,45 @@ const Checkout = () => {
                       onChange={(e) => setCardCvc(e.target.value)}
                       className="input-field text-sm py-2.5"
                       placeholder="CVC"
+                    />
+                  </div>
+                </div>
+              )}
+
+
+
+              {/* UPI QR Code Instruction and input Panel */}
+              {paymentMethod === 'upi' && (
+                <div className="border border-brand-dark-200 rounded-2xl p-6 bg-brand-dark-50 space-y-5 max-w-md animate-fadeIn">
+                  <h4 className="font-sans font-bold text-xs uppercase tracking-wider text-brand-dark-700">
+                    UPI Payment Details
+                  </h4>
+                  <div className="flex flex-col items-center gap-3 bg-white p-4 rounded-xl border border-brand-dark-150">
+                    <p className="font-sans text-xs text-brand-dark-600 text-center">
+                      Scan this QR code using any UPI app (GPay, PhonePe, Paytm, BHIM) to pay **₹{total.toLocaleString('en-IN')}.00**
+                    </p>
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                        `upi://pay?pa=merch@geetauniversity.ac.in&pn=Geeta%20University%20MerchStore&am=${total}&cu=INR&tn=GU%20MerchStore%20Order`
+                      )}`} 
+                      alt="UPI QR Code" 
+                      className="w-40 h-40 object-contain border border-brand-dark-100 rounded-lg p-1 bg-white"
+                    />
+                    <span className="font-display font-bold text-xs text-brand-dark-850">
+                      UPI VPA: merch@geetauniversity.ac.in
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-left text-xs font-bold text-brand-dark-700">
+                      UPI Transaction ID / Ref No (12 Digits)
+                    </label>
+                    <input
+                      type="text"
+                      maxLength="12"
+                      value={upiTxnId}
+                      onChange={(e) => setUpiTxnId(e.target.value.replace(/\D/g, ''))}
+                      className="input-field text-sm py-2.5"
+                      placeholder="e.g. 123456789012"
                     />
                   </div>
                 </div>
@@ -556,7 +636,11 @@ const Checkout = () => {
                   <div className="text-left space-y-1">
                     <span className="font-bold uppercase tracking-wider text-brand-dark-500">Payment Mode</span>
                     <p className="text-brand-dark-800 font-semibold capitalize">
-                      {paymentMethod === 'stripe' ? 'Online Card (Stripe)' : 'Cash on Collection (COD)'}
+                      {paymentMethod === 'stripe' 
+                        ? 'Online Card (Stripe)' 
+                        : paymentMethod === 'upi'
+                        ? `UPI Payment (Ref: ${upiTxnId || 'Not Entered'})`
+                        : 'Cash on Collection (COD)'}
                     </p>
                   </div>
                   <button onClick={() => setStep(2)} className="font-bold text-brand-maroon-700 hover:text-brand-maroon-600 h-fit">Edit</button>
@@ -596,12 +680,16 @@ const Checkout = () => {
                   {isProcessingPayment ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Authorizing Payment Card...
+                      {paymentMethod === 'stripe' ? 'Authorizing Payment Card...' : paymentMethod === 'upi' ? 'Verifying UPI Transaction...' : 'Placing Order...'}
                     </>
                   ) : (
                     <>
                       <Check className="w-4 h-4" />
-                      Authorize & Place Order (₹{total.toLocaleString('en-IN')}.00)
+                      {paymentMethod === 'stripe' 
+                        ? `Authorize & Place Order (₹${total.toLocaleString('en-IN')}.00)` 
+                        : paymentMethod === 'upi'
+                        ? `Submit & Place Order (₹${total.toLocaleString('en-IN')}.00)`
+                        : `Place Order (₹${total.toLocaleString('en-IN')}.00)`}
                     </>
                   )}
                 </button>
