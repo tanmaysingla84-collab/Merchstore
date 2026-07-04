@@ -10,7 +10,7 @@ const ProductList = () => {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const { items: products, loading, filters } = useSelector((state) => state.products);
-  const safeProducts = Array.isArray(products) ? products : [];
+  const safeProducts = Array.isArray(products) ? products.filter((p) => p.isActive !== false) : [];
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // 1. Sync URL query parameters to Redux state on load

@@ -21,7 +21,7 @@ const registerSchema = z.object({
   email: z.string()
     .min(1, 'Email is required')
     .email('Please enter a valid email address')
-    .refine(isGUEmail, { message: 'Only Geeta University emails (@geeta.ac.in / @geetauniversity.ac.in / @geetauniversity.edu.in) are allowed' }),
+    .refine(isGUEmail, { message: 'Only Geeta University emails (@geeta.ac.in / @geetauniversity.ac.in / @geetauniversity.edu.in / @geeta.edu) are allowed' }),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Must contain an uppercase letter')
@@ -259,7 +259,7 @@ const Register = () => {
               </div>
               {errors.email
                 ? <p className="text-xs text-red-400 mt-1.5 ml-1">⚠ {errors.email.message}</p>
-                : <p className="text-[10px] text-white/25 mt-1.5 ml-1">@geeta.ac.in · @geetauniversity.ac.in · @geetauniversity.edu.in</p>
+                : <p className="text-[10px] text-white/25 mt-1.5 ml-1">@geeta.ac.in · @geetauniversity.ac.in · @geetauniversity.edu.in · @geeta.edu</p>
               }
             </div>
 

@@ -1,5 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../utils/api';
+import {
+  createAdminProduct,
+  updateAdminProduct,
+  deleteAdminProduct,
+} from '../admin/adminSlice';
 
 const normalizeProductsPayload = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -107,6 +112,40 @@ const productSlice = createSlice({
       .addCase(fetchProductById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // Sync public catalog when admin manages products
+      .addCase(createAdminProduct.fulfilled, (state, action) => {
+        const newProduct = action.payload?.data;
+        if (newProduct?._id) {
+          state.items = [newProduct, ...state.items.filter((p) => p._id !== newProduct._id)];
+        }
+      })
+      .addCase(updateAdminProduct.fulfilled, (state, action) => {
+        const updated = action.payload?.data;
+        if (!updated?._id) return;
+
+        if (updated.isActive === false) {
+          state.items = state.items.filter((p) => p._id !== updated._id);
+        } else {
+          const index = state.items.findIndex((p) => p._id === updated._id);
+          if (index !== -1) {
+            state.items[index] = updated;
+          } else {
+            state.items = [updated, ...state.items];
+          }
+        }
+
+        if (state.selectedProduct?._id === updated._id) {
+          state.selectedProduct = updated;
+        }
+      })
+      .addCase(deleteAdminProduct.fulfilled, (state, action) => {
+        const { id } = action.payload;
+        state.items = state.items.filter((p) => p._id !== id);
+        if (state.selectedProduct?._id === id) {
+          state.selectedProduct = null;
+        }
       });
   }
 });

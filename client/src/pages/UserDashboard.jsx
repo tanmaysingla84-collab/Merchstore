@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { User, ShoppingBag, MapPin, Eye, Plus, Trash, Shield, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { fetchUserOrders } from '../features/orders/orderSlice';
+import { fetchUserOrders, updateOrderStatusInList } from '../features/orders/orderSlice';
 import { addAddress, logout } from '../features/auth/authSlice';
+import { useUserOrdersSocket } from '../hooks/useUserOrdersSocket';
 import Loader from '../components/Loader';
 
 const UserDashboard = () => {
@@ -22,6 +23,26 @@ const UserDashboard = () => {
   useEffect(() => {
     dispatch(fetchUserOrders());
   }, [dispatch]);
+
+  const handleOrderStatusUpdate = useCallback((payload) => {
+    dispatch(updateOrderStatusInList({
+      orderId: payload.orderId,
+      status: payload.status,
+    }));
+    toast.success(`Your order #${payload.orderId.slice(-6)} is now ${payload.status}!`, {
+      icon: '📦',
+      duration: 4000,
+    });
+  }, [dispatch]);
+
+  useUserOrdersSocket(
+    orders.map((ord) => ord._id),
+    handleOrderStatusUpdate
+  );
+
+  if (user?.role === 'admin') {
+    return <Navigate to="/admin/analytics" replace />;
+  }
 
   const handleAddAddress = (e) => {
     e.preventDefault();

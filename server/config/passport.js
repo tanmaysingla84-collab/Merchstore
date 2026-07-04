@@ -6,7 +6,7 @@ const passport       = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User           = require('../models/User');
 
-const GU_DOMAINS = ['@geeta.ac.in', '@geetauniversity.ac.in', '@geetauniversity.edu.in'];
+const GU_DOMAINS = ['@geeta.ac.in', '@geetauniversity.ac.in', '@geetauniversity.edu.in', '@geeta.edu'];
 const isGUEmail  = (email) => email && GU_DOMAINS.some(d => email.toLowerCase().endsWith(d));
 
 passport.use(
@@ -27,7 +27,7 @@ passport.use(
         // ── DOMAIN RESTRICTION ──────────────────────────────────────────────
         if (!isGUEmail(email)) {
           return done(null, false, {
-            message: 'Access denied. Only Geeta University email accounts (@geeta.ac.in / @geetauniversity.ac.in / @geetauniversity.edu.in) are permitted.',
+            message: 'Access denied. Only Geeta University email accounts (@geeta.ac.in / @geetauniversity.ac.in / @geetauniversity.edu.in / @geeta.edu) are permitted.',
           });
         }
 
