@@ -2,24 +2,21 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   Search, 
-  Eye, 
   ChevronDown, 
   ChevronUp, 
   MapPin, 
   Calendar, 
   CreditCard, 
-  Tag, 
   Truck, 
-  Loader2,
-  AlertCircle
+  Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { fetchAdminOrders, updateAdminOrderStatus, updateOrderStatusSocket } from '../../features/admin/adminSlice';
+import { fetchAdminOrders, updateAdminOrderStatus, updateAdminOrderPaymentStatus, updateOrderStatusSocket } from '../../features/admin/adminSlice';
 import { useAdminSocket } from '../../hooks/useAdminSocket';
 
 const AdminOrders = () => {
   const dispatch = useDispatch();
-  const { orders, ordersPagination, loading } = useSelector((state) => state.admin);
+  const { orders, loading } = useSelector((state) => state.admin);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -72,6 +69,21 @@ const AdminOrders = () => {
       });
   };
 
+  const handlePaymentStatusChange = (orderId, newPaymentStatus) => {
+    dispatch(updateAdminOrderPaymentStatus({ 
+      id: orderId, 
+      paymentStatus: newPaymentStatus
+    }))
+      .unwrap()
+      .then((res) => {
+        toast.success(res.message || `Payment status updated to ${newPaymentStatus}!`);
+        loadOrders();
+      })
+      .catch((err) => {
+        toast.error(err || 'Failed to update payment status');
+      });
+  };
+
   const toggleExpandOrder = (orderId) => {
     if (expandedOrderId === orderId) {
       setExpandedOrderId(null);
@@ -97,11 +109,6 @@ const AdminOrders = () => {
     }
   };
 
-  const getPaymentStatusColor = (pStatus) => {
-    if (pStatus === 'paid') return 'text-emerald-600 font-bold';
-    if (pStatus === 'failed') return 'text-rose-600 font-bold';
-    return 'text-amber-600 font-semibold';
-  };
 
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-IN', {
@@ -335,11 +342,22 @@ const AdminOrders = () => {
                                     <span>Transaction details</span>
                                   </div>
                                   <div className="font-sans text-brand-dark-600 pl-5 space-y-1">
-                                    <div className="flex justify-between">
+                                    <div className="flex justify-between items-center py-1">
                                       <span>Payment status:</span>
-                                      <span className={getPaymentStatusColor(order.paymentStatus)}>
-                                        {order.paymentStatus.toUpperCase()}
-                                      </span>
+                                      <select
+                                        className={`px-2 py-0.5 bg-white border rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-brand-maroon-500 capitalize cursor-pointer ${
+                                          order.paymentStatus === 'paid' ? 'text-emerald-600 border-emerald-250' :
+                                          order.paymentStatus === 'failed' ? 'text-rose-600 border-rose-250' :
+                                          'text-amber-600 border-amber-250'
+                                        }`}
+                                        value={order.paymentStatus}
+                                        onChange={(e) => handlePaymentStatusChange(order._id, e.target.value)}
+                                      >
+                                        <option value="pending">Pending</option>
+                                        <option value="paid">Paid</option>
+                                        <option value="failed">Failed</option>
+                                        <option value="refunded">Refunded</option>
+                                      </select>
                                     </div>
                                     {order.stripePaymentIntentId && (
                                       <div className="text-[10px]">

@@ -6,65 +6,90 @@
 
 @layer base {
   body {
-    @apply bg-brand-dark-50 text-brand-dark-800 font-sans antialiased selection:bg-brand-maroon-200 selection:text-brand-maroon-900;
+    @apply bg-[#F9FAFB] text-brand-dark-800 font-sans antialiased selection:bg-brand-maroon-200 selection:text-brand-maroon-900;
     margin: 0;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display text-brand-dark-900 font-semibold tracking-tight;
+    @apply font-display text-brand-dark-900 font-bold tracking-tight;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply px-6 py-3 bg-brand-maroon-700 hover:bg-brand-maroon-600 active:bg-brand-maroon-800 text-white font-medium rounded-xl shadow-premium hover:shadow-premium-hover transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed;
+    @apply px-6 py-3.5 bg-brand-maroon-700 hover:bg-brand-maroon-600 active:bg-brand-maroon-800 text-white font-semibold rounded-2xl shadow-premium hover:shadow-premium-hover transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed;
   }
-  
+
   .btn-secondary {
-    @apply px-6 py-3 bg-white border border-brand-dark-200 hover:border-brand-maroon-500 text-brand-dark-700 hover:text-brand-maroon-700 font-medium rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply px-6 py-3.5 bg-white border border-brand-dark-200/80 hover:border-brand-maroon-500/60 text-brand-dark-700 hover:text-brand-maroon-700 font-semibold rounded-2xl transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed;
   }
 
   .btn-gold {
-    @apply px-6 py-3 bg-brand-gold-500 hover:bg-brand-gold-400 active:bg-brand-gold-600 text-brand-dark-950 font-semibold rounded-xl shadow-md transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed;
+    @apply px-6 py-3.5 bg-gradient-to-r from-brand-gold-500 via-brand-gold-400 to-brand-gold-500 hover:from-brand-gold-400 hover:to-brand-gold-300 active:from-brand-gold-600 active:to-brand-gold-500 text-brand-dark-950 font-bold rounded-2xl shadow-[0_8px_20px_-6px_rgba(212,175,55,0.35)] hover:shadow-[0_16px_32px_-4px_rgba(212,175,55,0.55)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed;
   }
 
   .card-premium {
-    @apply bg-white border border-brand-dark-100 rounded-2xl shadow-premium hover:shadow-premium-hover transition-all duration-300 overflow-hidden;
+    @apply bg-white border border-brand-dark-100/60 rounded-[24px] shadow-premium hover:shadow-premium-hover hover:border-brand-maroon-200/30 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden;
   }
 
   .glass-panel {
-    @apply bg-white/70 backdrop-blur-md border border-white/30 shadow-glass;
+    @apply bg-white/70 backdrop-blur-xl border border-white/50 shadow-glass rounded-[24px];
   }
-  
+
   .glass-panel-dark {
-    @apply bg-brand-dark-950/80 backdrop-blur-md border border-brand-dark-900/50 shadow-2xl;
+    @apply bg-brand-dark-950/80 backdrop-blur-xl border border-white/10 shadow-2xl rounded-[24px];
   }
-  
+
   .input-field {
-    @apply w-full px-4 py-3 bg-white border border-brand-dark-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-maroon-500 focus:border-transparent transition-all duration-200;
+    @apply w-full px-4 py-3 bg-white border border-brand-dark-200/80 rounded-2xl focus:outline-none focus:ring-4 focus:ring-brand-maroon-500/10 focus:border-brand-maroon-400/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)];
+  }
+
+  .section-heading {
+    @apply font-display font-extrabold text-3xl sm:text-4xl text-brand-dark-900 tracking-tight leading-tight;
+  }
+
+  .section-subheading {
+    @apply font-sans text-brand-dark-500 text-sm sm:text-base mt-3 max-w-xl;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-thumb {
     @apply bg-brand-dark-200 rounded-full hover:bg-brand-dark-300;
   }
 }
 
-/* Custom animation for gradient text */
 @keyframes gradient-shift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .animate-gradient {
   background-size: 200% auto;
   animation: gradient-shift 4s ease infinite;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.5s ease-out forwards;
 }

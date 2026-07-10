@@ -57,6 +57,16 @@ const updateProductSchema = z.object({
   tags:         tagsPreprocess.optional(),
   isFeatured:   z.boolean({ coerce: true }).optional(),
   isActive:     z.boolean({ coerce: true }).optional(),
+  removedImages: z.preprocess((val) => {
+    if (typeof val === 'string') {
+      try {
+        return JSON.parse(val);
+      } catch (_) {
+        return [val];
+      }
+    }
+    return val;
+  }, z.array(z.string())).optional(),
 });
 
 module.exports = {

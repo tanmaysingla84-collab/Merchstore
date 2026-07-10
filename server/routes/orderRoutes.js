@@ -11,10 +11,12 @@ const {
   getSingleOrder,
   adminGetOrders,
   updateOrderStatus,
+  updateOrderPaymentStatus,
 } = require('../controllers/orderController');
 const {
   createOrderSchema,
   updateOrderStatusSchema,
+  updateOrderPaymentStatusSchema,
   adminOrdersQuerySchema,
 } = require('../validators/orderValidator');
 
@@ -47,6 +49,14 @@ router.put(
   requireAdmin,
   validate(updateOrderStatusSchema),
   updateOrderStatus
+);
+
+router.put(
+  '/admin/:id/payment-status',
+  protect,
+  requireAdmin,
+  validate(updateOrderPaymentStatusSchema),
+  updateOrderPaymentStatus
 );
 
 module.exports = router;

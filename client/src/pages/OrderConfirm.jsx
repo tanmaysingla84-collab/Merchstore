@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { CheckCircle, Package, Truck, Compass, Check, ArrowRight, ShoppingBag } from 'lucide-react';
+import { CheckCircle, Package, Truck, Compass, Check, ArrowRight, ShoppingBag, Star, X } from 'lucide-react';
 import { fetchOrderById } from '../features/orders/orderSlice';
 import { useSocket } from '../hooks/useSocket';
 import Loader from '../components/Loader';
+import api from '../utils/api';
+import toast from 'react-hot-toast';
 
 const OrderConfirm = () => {
   const { orderId } = useParams();
@@ -12,6 +14,43 @@ const OrderConfirm = () => {
   
   const { currentOrder: order, loading } = useSelector((state) => state.orders);
   const [localStatus, setLocalStatus] = useState('');
+
+  // Review states
+  const [selectedProductForReview, setSelectedProductForReview] = useState(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedProductForReview) return;
+
+    if (!reviewComment.trim()) {
+      toast.error('Please write a comment for your review.');
+      return;
+    }
+
+    if (reviewComment.trim().length < 10) {
+      toast.error('Comment must be at least 10 characters.');
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      await api.post(`/reviews/${selectedProductForReview.productId}`, {
+        rating: reviewRating,
+        comment: reviewComment,
+      });
+      toast.success('Thank you! Review posted successfully.');
+      setSelectedProductForReview(null);
+      setReviewComment('');
+      setReviewRating(5);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit review');
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   // 1. Fetch Order on mount
   useEffect(() => {
@@ -157,6 +196,14 @@ const OrderConfirm = () => {
                   <span className="font-sans text-xs text-brand-dark-500 font-semibold mt-0.5 block">
                     Size: {item.size} | Qty: {item.qty}
                   </span>
+                  {(localStatus || order.status || '').toLowerCase() === 'delivered' && (
+                    <button
+                      onClick={() => setSelectedProductForReview(item)}
+                      className="text-xs font-semibold text-brand-maroon-700 hover:text-brand-maroon-800 hover:underline mt-1 block text-left"
+                    >
+                      Review Product
+                    </button>
+                  )}
                 </div>
                 <span className="font-sans font-bold text-sm text-brand-dark-950">
                   ₹{(item.price * item.qty).toLocaleString('en-IN')}.00
@@ -240,6 +287,91 @@ const OrderConfirm = () => {
           </div>
         </div>
       </div>
+
+      {/* Review Dialog Modal */}
+      {selectedProductForReview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark-950/40 backdrop-blur-md animate-fadeIn text-left">
+          <div 
+            onClick={() => setSelectedProductForReview(null)} 
+            className="absolute inset-0"
+          />
+          <div className="relative bg-white border border-brand-dark-100 rounded-3xl p-6 sm:p-8 shadow-premium w-full max-w-lg z-10 animate-slideUp">
+            <button 
+              onClick={() => setSelectedProductForReview(null)}
+              className="absolute top-4 right-4 p-2 text-brand-dark-400 hover:text-brand-dark-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="font-display font-black text-xl text-brand-dark-900 mb-2">
+              Review Product
+            </h3>
+            <p className="font-sans text-xs text-brand-dark-500 mb-6">
+              Share your thoughts on <strong className="text-brand-dark-800 font-bold">{selectedProductForReview.name}</strong> (Size: {selectedProductForReview.size}).
+            </p>
+
+            <form onSubmit={handleReviewSubmit} className="space-y-5">
+              {/* Star Selection */}
+              <div className="space-y-2">
+                <label className="block font-sans font-bold text-xxs uppercase tracking-wider text-brand-dark-700">
+                  Overall Rating
+                </label>
+                <div className="flex gap-1.5">
+                  {Array.from({ length: 5 }).map((_, idx) => {
+                    const starVal = idx + 1;
+                    return (
+                      <button
+                        type="button"
+                        key={idx}
+                        onClick={() => setReviewRating(starVal)}
+                        className="p-1 hover:scale-115 transition-transform text-brand-gold-500 focus:outline-none"
+                      >
+                        <Star 
+                          className={`w-7 h-7 ${
+                            starVal <= reviewRating ? 'fill-brand-gold-500' : 'text-brand-dark-200'
+                          }`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Comment text area */}
+              <div className="space-y-2">
+                <label className="block font-sans font-bold text-xxs uppercase tracking-wider text-brand-dark-700">
+                  Review Comments
+                </label>
+                <textarea
+                  rows="4"
+                  className="w-full border border-brand-dark-200 rounded-2xl p-4 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-brand-maroon-600/20 focus:border-brand-maroon-700 transition-all leading-relaxed"
+                  placeholder="What did you like or dislike about the fit, quality, or style?"
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                />
+              </div>
+
+              {/* Footer Buttons */}
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedProductForReview(null)}
+                  className="px-5 py-2.5 bg-brand-dark-50 hover:bg-brand-dark-100 text-brand-dark-700 font-sans font-bold text-xs rounded-xl border border-brand-dark-200 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingReview}
+                  className="px-6 py-2.5 bg-brand-maroon-700 hover:bg-brand-maroon-600 disabled:bg-brand-maroon-400 text-white font-sans font-bold text-xs rounded-xl shadow-premium transition-all"
+                >
+                  {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

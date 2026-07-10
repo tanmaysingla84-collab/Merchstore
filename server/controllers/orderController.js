@@ -455,10 +455,46 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   });
 });
 
+// ─── PUT /api/admin/orders/:id/payment-status ─────────────────────────────────
+const updateOrderPaymentStatus = asyncHandler(async (req, res) => {
+  const { paymentStatus } = req.body;
+  const { id }            = req.params;
+
+  const order = await Order.findById(id).populate('userId', 'name email');
+
+  if (!order) {
+    return res.status(404).json({ success: false, message: 'Order not found' });
+  }
+
+  const previousPaymentStatus = order.paymentStatus;
+  order.paymentStatus = paymentStatus;
+
+  order.statusHistory.push({
+    status: order.status,
+    timestamp: new Date(),
+    note: `Payment status updated from '${previousPaymentStatus}' to '${paymentStatus}'`,
+    updatedBy: req.user._id,
+  });
+
+  await order.save();
+
+  res.status(200).json({
+    success: true,
+    message: `Payment status updated to '${paymentStatus}'`,
+    data: {
+      orderId:       order._id,
+      paymentStatus: order.paymentStatus,
+      status:        order.status,
+      history:       order.statusHistory,
+    },
+  });
+});
+
 module.exports = {
   createOrder,
   getUserOrders,
   getSingleOrder,
   adminGetOrders,
   updateOrderStatus,
+  updateOrderPaymentStatus,
 };

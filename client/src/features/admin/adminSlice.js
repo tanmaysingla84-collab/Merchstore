@@ -69,6 +69,18 @@ export const updateAdminOrderStatus = createAsyncThunk(
   }
 );
 
+export const updateAdminOrderPaymentStatus = createAsyncThunk(
+  'admin/updateOrderPaymentStatus',
+  async ({ id, paymentStatus }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(`/orders/admin/${id}/payment-status`, { paymentStatus });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update payment status');
+    }
+  }
+);
+
 // Async Thunks for Admin Analytics
 export const fetchAnalyticsSummary = createAsyncThunk(
   'admin/fetchAnalyticsSummary',
@@ -84,9 +96,9 @@ export const fetchAnalyticsSummary = createAsyncThunk(
 
 export const fetchRevenueAnalytics = createAsyncThunk(
   'admin/fetchRevenueAnalytics',
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await api.get('/admin/analytics/revenue');
+      const response = await api.get('/admin/analytics/revenue', { params });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to load revenue analytics');
@@ -96,9 +108,9 @@ export const fetchRevenueAnalytics = createAsyncThunk(
 
 export const fetchTopProductsAnalytics = createAsyncThunk(
   'admin/fetchTopProductsAnalytics',
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await api.get('/admin/analytics/top-products');
+      const response = await api.get('/admin/analytics/top-products', { params });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to load top products analytics');
@@ -222,6 +234,31 @@ const adminSlice = createSlice({
         state.error.orders = action.payload;
       })
 
+      // Update Order Payment Status
+      .addCase(updateAdminOrderPaymentStatus.pending, (state) => {
+        state.loading.orders = true;
+        state.error.orders = null;
+      })
+      .addCase(updateAdminOrderPaymentStatus.fulfilled, (state, action) => {
+        state.loading.orders = false;
+        const updatedOrder = action.payload.data;
+        if (updatedOrder) {
+          const index = state.orders.findIndex(
+            (o) => String(o._id) === String(updatedOrder.orderId)
+          );
+          if (index !== -1) {
+            state.orders[index].paymentStatus = updatedOrder.paymentStatus;
+            if (updatedOrder.history) {
+              state.orders[index].statusHistory = updatedOrder.history;
+            }
+          }
+        }
+      })
+      .addCase(updateAdminOrderPaymentStatus.rejected, (state, action) => {
+        state.loading.orders = false;
+        state.error.orders = action.payload;
+      })
+
       // Fetch Analytics Summary
       .addCase(fetchAnalyticsSummary.pending, (state) => {
         state.loading.analytics = true;
@@ -237,13 +274,29 @@ const adminSlice = createSlice({
       })
 
       // Fetch Revenue Analytics
+      .addCase(fetchRevenueAnalytics.pending, (state) => {
+        state.loading.analytics = true;
+      })
       .addCase(fetchRevenueAnalytics.fulfilled, (state, action) => {
-        state.analytics.revenue = action.payload.data || [];
+        state.loading.analytics = false;
+        state.analytics.revenue = action.payload.data || { periods: [] };
+      })
+      .addCase(fetchRevenueAnalytics.rejected, (state, action) => {
+        state.loading.analytics = false;
+        state.error.analytics = action.payload;
       })
 
       // Fetch Top Products Analytics
+      .addCase(fetchTopProductsAnalytics.pending, (state) => {
+        state.loading.analytics = true;
+      })
       .addCase(fetchTopProductsAnalytics.fulfilled, (state, action) => {
+        state.loading.analytics = false;
         state.analytics.topProducts = action.payload.data || [];
+      })
+      .addCase(fetchTopProductsAnalytics.rejected, (state, action) => {
+        state.loading.analytics = false;
+        state.error.analytics = action.payload;
       });
   },
 });

@@ -46,6 +46,15 @@ const updateOrderStatusSchema = z.object({
 });
 
 /**
+ * PUT /api/admin/orders/:id/payment-status
+ */
+const updateOrderPaymentStatusSchema = z.object({
+  paymentStatus: z.enum(['pending', 'paid', 'failed', 'refunded'], {
+    errorMap: () => ({ message: 'Invalid payment status' }),
+  }),
+});
+
+/**
  * GET /api/admin/orders — query params
  */
 const adminOrdersQuerySchema = z.object({
@@ -61,5 +70,6 @@ const adminOrdersQuerySchema = z.object({
 module.exports = {
   createOrderSchema,
   updateOrderStatusSchema,
+  updateOrderPaymentStatusSchema,
   adminOrdersQuerySchema,
 };

@@ -11,11 +11,11 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const { isLoggedIn, user, logout } = useAuth();
   const cartItems = useSelector((state) => state.cart.items);
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  // Calculate total quantity of items in cart
   const cartCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
   useEffect(() => {
@@ -24,11 +24,16 @@ const Navbar = () => {
     }
   }, [isLoggedIn, dispatch]);
 
-  // Close menus on page navigation
   useEffect(() => {
     setIsOpen(false);
     setDropdownOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const handleLogoutClick = () => {
     logout();
@@ -38,94 +43,94 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-40 w-full transition-all duration-300 bg-white/80 backdrop-blur-md border-b border-brand-dark-100 shadow-glass">
+    <nav className={`sticky top-0 z-40 w-full transition-all duration-500 ${
+      scrolled
+        ? 'bg-white/95 backdrop-blur-xl border-b border-brand-dark-200/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]'
+        : 'bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-none'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-24">
-          {/* Logo and Brand */}
+        <div className="flex justify-between h-[76px]">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2.5 group">
-              {/* Gold seal emblem */}
-              <div className="w-20 h-20 flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
-                <img 
-                  src="/logo.png" 
-                  alt="Geeta University Logo" 
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="w-11 h-11 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                <img
+                  src="/logo.png"
+                  alt="Geeta University Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
               <div className="flex flex-col">
-                <span className="font-display font-bold text-xl text-brand-maroon-700 leading-none tracking-tight group-hover:text-brand-maroon-600 transition-colors">
+                <span className="font-display font-black text-lg text-brand-maroon-700 leading-none tracking-tight group-hover:text-brand-maroon-600 transition-colors">
                   GEETA UNIVERSITY
                 </span>
-                <span className="font-sans font-medium text-[10px] text-brand-gold-600 uppercase tracking-widest leading-none mt-1">
+                <span className="font-sans font-bold text-[9px] text-brand-gold-600 uppercase tracking-[0.22em] leading-none mt-1">
                   Merchandise Store
                 </span>
               </div>
             </Link>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              to="/" 
-              className={`font-sans font-medium text-sm transition-colors ${
-                isActive('/') ? 'text-brand-maroon-700 font-semibold border-b-2 border-brand-maroon-700 py-1' : 'text-brand-dark-600 hover:text-brand-maroon-700'
-              }`}
-            >
-              Home
-            </Link>
-            <Link 
-              to="/products" 
-              className={`font-sans font-medium text-sm transition-colors ${
-                isActive('/products') ? 'text-brand-maroon-700 font-semibold border-b-2 border-brand-maroon-700 py-1' : 'text-brand-dark-600 hover:text-brand-maroon-700'
-              }`}
-            >
-              Catalog
-            </Link>
+          <div className="hidden md:flex items-center gap-1.5">
+            {[
+              { to: '/', label: 'Home' },
+              { to: '/products', label: 'Catalog' },
+            ].map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`px-4 py-2 rounded-xl font-sans font-semibold text-sm transition-all duration-300 ${
+                  isActive(to)
+                    ? 'text-brand-maroon-700 bg-brand-maroon-50/80 shadow-[inset_0_1px_2px_rgba(138,23,58,0.06)]'
+                    : 'text-brand-dark-600 hover:text-brand-maroon-700 hover:bg-brand-dark-50/70'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
           </div>
 
-          {/* Action Icons */}
-          <div className="hidden md:flex items-center space-x-6">
-            {/* Cart Icon */}
-            <Link to="/cart" className="relative p-2.5 text-brand-dark-700 hover:text-brand-maroon-700 hover:bg-brand-maroon-50 rounded-xl transition-all duration-200">
+          <div className="hidden md:flex items-center gap-4">
+            <Link
+              to="/cart"
+              className="relative p-2.5 text-brand-dark-600 hover:text-brand-maroon-700 hover:bg-brand-maroon-50/60 rounded-2xl transition-all duration-300"
+            >
               <ShoppingBag className="w-5 h-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brand-gold-500 text-brand-dark-950 font-sans font-bold text-xs w-5 h-5 flex items-center justify-center rounded-full shadow-md animate-bounce">
+                <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-brand-gold-500 to-brand-gold-400 text-brand-dark-950 font-sans font-black text-[10px] min-w-[19px] h-[19px] flex items-center justify-center rounded-full shadow-[0_3px_10px_-2px_rgba(212,175,55,0.4)] border border-white/50">
                   {cartCount}
                 </span>
               )}
             </Link>
 
-            {/* User Account actions */}
             {isLoggedIn ? (
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 pr-3 text-brand-dark-800 hover:text-brand-maroon-700 hover:bg-brand-maroon-50 rounded-xl border border-brand-dark-200 transition-all duration-200"
+                  className="flex items-center gap-2.5 pl-1.5 pr-3.5 py-1.5 text-brand-dark-850 hover:bg-brand-dark-100/50 rounded-2xl border border-brand-dark-200/80 hover:border-brand-dark-350 transition-all duration-300 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.02)]"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-brand-maroon-100 text-brand-maroon-800 flex items-center justify-center font-display font-semibold text-sm">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-maroon-600 to-brand-maroon-800 text-white flex items-center justify-center font-display font-bold text-sm shadow-[0_2px_6px_rgba(138,23,58,0.2)]">
                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <span className="font-sans font-medium text-sm">{user?.name?.split(' ')[0]}</span>
-                  <ChevronDown className="w-4 h-4 text-brand-dark-500" />
+                  <span className="font-sans font-semibold text-sm">{user?.name?.split(' ')[0]}</span>
+                  <ChevronDown className={`w-4 h-4 text-brand-dark-450 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Dropdown Menu */}
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-52 bg-white border border-brand-dark-100 rounded-xl shadow-xl py-1.5 z-50 animate-fadeIn">
-                    <div className="px-4 py-2 border-b border-brand-dark-100">
-                      <p className="font-display font-semibold text-sm text-brand-dark-900 truncate">{user?.name}</p>
-                      <p className="font-sans text-xs text-brand-dark-500 truncate">{user?.email}</p>
+                  <div className="absolute right-0 mt-2.5 w-56 bg-white/95 backdrop-blur-xl border border-brand-dark-100 rounded-2xl shadow-xl py-2 z-50 animate-fadeIn">
+                    <div className="px-4 py-3 border-b border-brand-dark-100">
+                      <p className="font-display font-bold text-sm text-brand-dark-900 truncate">{user?.name}</p>
+                      <p className="font-sans text-xs text-brand-dark-450 truncate mt-0.5">{user?.email}</p>
                     </div>
-                    <Link 
-                      to={user?.role === 'admin' ? '/admin/analytics' : '/dashboard'} 
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-brand-dark-700 hover:bg-brand-maroon-50 hover:text-brand-maroon-700 transition-colors"
+                    <Link
+                      to={user?.role === 'admin' ? '/admin/analytics' : '/dashboard'}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-brand-dark-700 hover:bg-brand-maroon-50 hover:text-brand-maroon-700 transition-colors font-medium"
                     >
                       <LayoutDashboard className="w-4 h-4" />
                       {user?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
                     </Link>
-                    <button 
+                    <button
                       onClick={handleLogoutClick}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50/70 transition-colors text-left font-medium"
                     >
                       <LogOut className="w-4 h-4" />
                       Sign Out
@@ -134,91 +139,97 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
-                <Link to="/login" state={{ from: location }} className="px-4.5 py-2 text-sm font-semibold text-brand-maroon-700 hover:text-brand-maroon-600 transition-colors">
+              <div className="flex items-center gap-2.5">
+                <Link
+                  to="/login"
+                  state={{ from: location }}
+                  className="px-4 py-2.5 text-sm font-bold text-brand-dark-600 hover:text-brand-maroon-700 transition-colors"
+                >
                   Login
                 </Link>
-                <Link to="/register" state={{ from: location }} className="px-5 py-2 bg-brand-maroon-700 text-white rounded-xl text-sm font-semibold shadow-premium hover:bg-brand-maroon-600 transition-all duration-300">
+                <Link
+                  to="/register"
+                  state={{ from: location }}
+                  className="px-5 py-2.5 bg-brand-maroon-700 text-white rounded-2xl text-sm font-bold hover:bg-brand-maroon-600 active:scale-[0.98] transition-all duration-300 shadow-premium hover:shadow-premium-hover"
+                >
                   Register
                 </Link>
               </div>
             )}
           </div>
 
-          {/* Mobile hamburger menu */}
-          <div className="flex items-center md:hidden gap-4">
-            <Link to="/cart" className="relative p-2 text-brand-dark-700 hover:text-brand-maroon-700 rounded-lg">
-              <ShoppingBag className="w-6 h-6" />
+          <div className="flex items-center md:hidden gap-3">
+            <Link to="/cart" className="relative p-2 text-brand-dark-700 rounded-lg">
+              <ShoppingBag className="w-5 h-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-brand-gold-500 text-brand-dark-950 font-sans font-bold text-xxs w-4.5 h-4.5 flex items-center justify-center rounded-full shadow">
+                <span className="absolute -top-0.5 -right-0.5 bg-brand-gold-500 text-brand-dark-950 font-sans font-bold text-[9px] min-w-[16px] h-4 flex items-center justify-center rounded-full">
                   {cartCount}
                 </span>
               )}
             </Link>
-            <button 
+            <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-lg text-brand-dark-700 hover:text-brand-maroon-700 hover:bg-brand-dark-100 transition-all duration-200"
+              className="p-2 rounded-lg text-brand-dark-700 hover:bg-brand-dark-100 transition-all duration-200"
             >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
       {isOpen && (
-        <div className="md:hidden border-t border-brand-dark-100 bg-white px-4 pt-2 pb-6 space-y-3 shadow-lg">
-          <Link 
-            to="/" 
-            className={`block px-3 py-2.5 rounded-xl font-sans font-medium text-base ${
-              isActive('/') ? 'bg-brand-maroon-50 text-brand-maroon-700 font-semibold' : 'text-brand-dark-700 hover:bg-brand-dark-50'
+        <div className="md:hidden border-t border-brand-dark-100 bg-white/95 backdrop-blur-xl px-4 pt-2.5 pb-6 space-y-1.5 shadow-[0_12px_30px_-6px_rgba(0,0,0,0.08)] rounded-b-2xl animate-fadeIn">
+          <Link
+            to="/"
+            className={`block px-3 py-2.5 rounded-xl font-sans font-semibold text-sm transition-all ${
+              isActive('/') ? 'bg-brand-maroon-50 text-brand-maroon-700 shadow-[inset_0_1px_2px_rgba(138,23,58,0.05)]' : 'text-brand-dark-700 hover:bg-brand-dark-50/70'
             }`}
           >
             Home
           </Link>
-          <Link 
-            to="/products" 
-            className={`block px-3 py-2.5 rounded-xl font-sans font-medium text-base ${
-              isActive('/products') ? 'bg-brand-maroon-50 text-brand-maroon-700 font-semibold' : 'text-brand-dark-700 hover:bg-brand-dark-50'
+          <Link
+            to="/products"
+            className={`block px-3 py-2.5 rounded-xl font-sans font-semibold text-sm transition-all ${
+              isActive('/products') ? 'bg-brand-maroon-50 text-brand-maroon-700 shadow-[inset_0_1px_2px_rgba(138,23,58,0.05)]' : 'text-brand-dark-700 hover:bg-brand-dark-50/70'
             }`}
           >
             Catalog
           </Link>
 
-          <hr className="border-brand-dark-100 my-2" />
+          <hr className="border-brand-dark-100/80 my-2" />
 
           {isLoggedIn ? (
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex items-center gap-3 px-3 py-2">
-                <div className="w-10 h-10 rounded-lg bg-brand-maroon-100 text-brand-maroon-800 flex items-center justify-center font-display font-semibold">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-maroon-600 to-brand-maroon-800 text-white flex items-center justify-center font-display font-bold text-sm shadow-md">
                   {user?.name?.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex flex-col">
-                  <span className="font-display font-bold text-sm text-brand-dark-900 leading-none">{user?.name}</span>
-                  <span className="font-sans text-xs text-brand-dark-500 leading-none mt-1">{user?.email}</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-display font-bold text-sm text-brand-dark-900 truncate">{user?.name}</span>
+                  <span className="font-sans text-xs text-brand-dark-450 truncate mt-0.5">{user?.email}</span>
                 </div>
               </div>
-              <Link 
-                to={user?.role === 'admin' ? '/admin/analytics' : '/dashboard'} 
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-sans font-medium text-brand-dark-700 hover:bg-brand-dark-50"
+              <Link
+                to={user?.role === 'admin' ? '/admin/analytics' : '/dashboard'}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-sans font-semibold text-sm text-brand-dark-700 hover:bg-brand-dark-50/70"
               >
-                <LayoutDashboard className="w-5 h-5 text-brand-dark-500" />
+                <LayoutDashboard className="w-4 h-4 text-brand-dark-400" />
                 {user?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
               </Link>
-              <button 
+              <button
                 onClick={handleLogoutClick}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-sans font-medium text-red-600 hover:bg-red-50 text-left"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-sans font-semibold text-sm text-rose-600 hover:bg-rose-50/50 text-left"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4" />
                 Sign Out
               </button>
             </div>
           ) : (
-            <div className="flex flex-col space-y-2 pt-2 px-3">
-              <Link to="/login" state={{ from: location }} className="w-full text-center py-2.5 border border-brand-maroon-700 text-brand-maroon-700 rounded-xl font-semibold hover:bg-brand-maroon-50 transition-colors">
+            <div className="flex flex-col gap-2 pt-1 px-1">
+              <Link to="/login" state={{ from: location }} className="w-full text-center py-2.5 border border-brand-maroon-700 text-brand-maroon-700 rounded-xl font-bold text-sm hover:bg-brand-maroon-50/60 transition-all duration-300">
                 Login
               </Link>
-              <Link to="/register" state={{ from: location }} className="w-full text-center py-2.5 bg-brand-maroon-700 text-white rounded-xl font-semibold shadow-premium hover:bg-brand-maroon-600 transition-colors">
+              <Link to="/register" state={{ from: location }} className="w-full text-center py-2.5 bg-brand-maroon-700 text-white rounded-xl font-bold text-sm hover:bg-brand-maroon-600 active:scale-[0.98] transition-all duration-300 shadow-premium">
                 Register
               </Link>
             </div>

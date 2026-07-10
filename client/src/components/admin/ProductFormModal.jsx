@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Upload, AlertCircle, RefreshCw } from 'lucide-react';
+import { X, Plus, Trash2, Upload, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ProductFormModal = ({ isOpen, onClose, onSave, product, isSaving }) => {

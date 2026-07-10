@@ -9,6 +9,7 @@ const http    = require('http');
 const cors    = require('cors');
 const helmet  = require('helmet');
 const morgan  = require('morgan');
+const path    = require('path');
 
 const connectDB             = require('./config/db');
 const { globalLimiter }     = require('./middleware/rateLimiter');
@@ -40,8 +41,23 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow Cloudinary images
 }));
 
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(',').map(o => o.trim())
+  : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+
 app.use(cors({
-  origin:      process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, postman, curl)
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.includes('localhost:') ||
+      origin.includes('127.0.0.1:')
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'), false);
+  },
   credentials: true,
   methods:     ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -62,6 +78,9 @@ app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
 // Global JSON parser for all other routes
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // ── 4. Global Rate Limiter ────────────────────────────────────────────────────
 app.use(globalLimiter);
