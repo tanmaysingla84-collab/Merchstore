@@ -87,7 +87,7 @@ const Home = () => {
               </span>
               <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-[1.1] sm:leading-[1.05]">
                 Wear Your{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold-450 to-brand-gold-300">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold-500 to-brand-gold-300">
                   Pride
                 </span>
                 .<br />

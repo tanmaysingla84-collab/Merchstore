@@ -57,7 +57,7 @@ const ProductDetail = () => {
     setReviewsLoading(true);
     try {
       const response = await api.get(`/reviews/${id}`);
-      setReviews(response.data.reviews || []);
+      setReviews(response.data.data || response.data.reviews || []);
     } catch (err) {
       console.error('Failed to load reviews', err);
     } finally {
@@ -223,7 +223,7 @@ const ProductDetail = () => {
                 {product.averageRating?.toFixed(1) || '0.0'}
               </span>
               <span className="font-sans text-xs text-brand-dark-400 font-medium mt-0.5">
-                ({product.ratingsCount} verified reviews)
+                ({product.ratingsCount ?? product.totalRatings ?? 0} verified reviews)
               </span>
             </div>
           </div>
@@ -425,7 +425,7 @@ const ProductDetail = () => {
                   {reviews.map((rev, idx) => (
                     <div key={idx} className="py-5 first:pt-0 last:pb-0 space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="font-display font-bold text-brand-dark-900 text-sm">{rev.userName}</span>
+                        <span className="font-display font-bold text-brand-dark-900 text-sm">{rev.userId?.name || rev.userName || 'Verified Student'}</span>
                         <span className="font-sans text-xs text-brand-dark-400">
                           {new Date(rev.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>

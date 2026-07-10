@@ -101,7 +101,7 @@ const ProductCard = ({ product }) => {
             ))}
           </div>
           <span className="font-sans text-[10px] text-brand-dark-450 font-semibold">
-            {averageRating.toFixed(1)}
+            {(averageRating || 0).toFixed(1)}
           </span>
         </div>
 
