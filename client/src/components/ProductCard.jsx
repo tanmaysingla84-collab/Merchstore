@@ -59,12 +59,12 @@ const ProductCard = ({ product }) => {
       </span>
 
       {isOutOfStock && (
-        <span className="absolute top-3.5 right-3.5 z-10 px-2.5 py-1 rounded-lg bg-brand-dark-900/90 backdrop-blur-md text-white font-sans font-black text-[9px] uppercase tracking-wider shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
+        <span className="absolute top-3.5 right-3.5 z-10 px-2.5 py-1 rounded-lg bg-brand-dark-900/90 backdrop-blur-md text-white font-sans font-black text-[9px] uppercase tracking-wider shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:opacity-0 group-hover:-translate-y-2">
           Sold Out
         </span>
       )}
       {!isOutOfStock && isLowStock && (
-        <span className="absolute top-3.5 right-3.5 z-10 px-2.5 py-1 rounded-lg bg-brand-gold-500 text-brand-dark-950 font-sans font-black text-[9px] uppercase tracking-wider shadow-[0_4px_12px_-2px_rgba(212,175,55,0.35)]">
+        <span className="absolute top-3.5 right-3.5 z-10 px-2.5 py-1 rounded-lg bg-brand-gold-500 text-brand-dark-950 font-sans font-black text-[9px] uppercase tracking-wider shadow-[0_4px_12px_-2px_rgba(212,175,55,0.35)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:opacity-0 group-hover:-translate-y-2">
           {totalStock} Left
         </span>
       )}
@@ -76,6 +76,15 @@ const ProductCard = ({ product }) => {
           loading="lazy"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
         />
+
+        {/* Geeta University Logo hover watermark */}
+        <div className="absolute top-4 right-4 z-10 pointer-events-none select-none opacity-0 -translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
+          <img
+            src="/logo.png"
+            alt="Geeta University Logo"
+            className="w-10 h-10 object-contain bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-brand-dark-100/40 shadow-premium"
+          />
+        </div>
 
         {!isOutOfStock && (
           <button
