@@ -11,6 +11,21 @@ const { clearCartByUserId }  = require('./cartController');
 const { createPaymentIntent } = require('../services/stripeService');
 const { checkStockAvailability, decrementStock } = require('../services/inventoryService');
 const { emitOrderStatusUpdate } = require('../socket/orderSocket');
+const { sendEmail, buildOrderReceiptHTML } = require('../services/emailService');
+
+// ── Fire-and-forget receipt email (never throws to caller) ─────────────────────
+const sendReceiptEmail = (order, user) => {
+  try {
+    const html = buildOrderReceiptHTML(order, user);
+    sendEmail(
+      user.email,
+      `🎓 Order Confirmed — #${order._id.toString().slice(-10).toUpperCase()} | Geeta University MerchStore`,
+      html
+    ).catch(err => console.error('📧 Receipt email failed:', err.message));
+  } catch (err) {
+    console.error('📧 Receipt email build failed:', err.message);
+  }
+};
 
 // ─── POST /api/orders/create ──────────────────────────────────────────────────
 const resolveOrderAddress = (savedAddress, user) => {
@@ -42,6 +57,15 @@ const resolveOrderAddress = (savedAddress, user) => {
 const createOrder = asyncHandler(async (req, res) => {
   const { address, addressId, paymentMethod, couponCode } = req.body;
   const userId = req.user._id;
+
+  // ── Block restricted users ──
+  const fullUser = await User.findById(userId).select('isRestricted');
+  if (fullUser && fullUser.isRestricted) {
+    return res.status(403).json({
+      success: false,
+      message: 'Your account has been restricted due to repeated cancelled/fake orders. Contact support.'
+    });
+  }
 
   let resolvedAddress = address;
 
@@ -241,7 +265,14 @@ const createOrder = asyncHandler(async (req, res) => {
       }
     });
 
+    // ── Fetch user for email (req.user may lack email) ────────────────────────
+    let emailUser = null;
+    try {
+      emailUser = await User.findById(userId).select('name email').lean();
+    } catch (_) { /* non-critical */ }
+
     if (paymentMethod === 'stripe' && savedOrder) {
+      if (emailUser) sendReceiptEmail(savedOrder, emailUser);
       return res.status(201).json({
         success: true,
         message: 'Order initiated — complete payment',
@@ -258,6 +289,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
     // COD response (outside transaction block)
     if (paymentMethod === 'cod' && savedOrder) {
+      if (emailUser) sendReceiptEmail(savedOrder, emailUser);
       return res.status(201).json({
         success: true,
         message: 'Order placed successfully (Cash on Delivery)',
@@ -273,6 +305,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
     // UPI response (outside transaction block)
     if (paymentMethod === 'upi' && savedOrder) {
+      if (emailUser) sendReceiptEmail(savedOrder, emailUser);
       return res.status(201).json({
         success: true,
         message: 'Order placed successfully (UPI Payment)',
@@ -435,6 +468,19 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     note:      note || `Status updated from '${previousStatus}' to '${status}'`,
     updatedBy: req.user._id,
   });
+
+  // ── Check for abusive statuses ──
+  if (['cancelled', 'returned', 'fraudulent'].includes(status) && !order.fakeCounted) {
+    const orderUser = await User.findById(order.userId._id);
+    if (orderUser) {
+      orderUser.fakeOrderCount = (orderUser.fakeOrderCount || 0) + 1;
+      if (orderUser.fakeOrderCount >= 5) {
+        orderUser.isRestricted = true;
+      }
+      await orderUser.save();
+    }
+    order.fakeCounted = true;
+  }
 
   await order.save();
 

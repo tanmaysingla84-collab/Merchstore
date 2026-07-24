@@ -13,6 +13,7 @@ const {
   googleCallback,
   addAddress,
   getAllUsers,
+  unrestrictUser,
 } = require('../controllers/authController');
 
 // Local auth routes
@@ -42,5 +43,8 @@ router.post('/address', protect, addAddress);
 
 // Admin-only route to list all users
 router.get('/admin/users', protect, requireAdmin, getAllUsers);
+
+// Admin-only route to unrestrict a user
+router.put('/admin/users/:id/unrestrict', protect, requireAdmin, unrestrictUser);
 
 module.exports = router;

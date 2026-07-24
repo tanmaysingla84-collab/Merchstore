@@ -21,6 +21,7 @@ import { logout } from '../../features/auth/authSlice';
 import AdminAnalytics from './AdminAnalytics';
 import AdminProducts from './AdminProducts';
 import AdminOrders from './AdminOrders';
+import AdminUsers from './AdminUsers';
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,6 +35,7 @@ const AdminDashboard = () => {
     { name: 'Command Center', href: '/admin/analytics', icon: BarChart3, desc: 'Revenue & insights' },
     { name: 'Product Catalog', href: '/admin/products', icon: ShoppingBag, desc: 'Add, edit, stock' },
     { name: 'Order Fulfillment', href: '/admin/orders', icon: ClipboardList, desc: 'Status & dispatch' },
+    { name: 'Users Management', href: '/admin/users', icon: User, desc: 'Accounts & restrictions' },
   ];
 
   const handleLogout = () => {
@@ -203,6 +205,7 @@ const AdminDashboard = () => {
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="orders" element={<AdminOrders />} />
+            <Route path="users" element={<AdminUsers />} />
             <Route path="*" element={<Navigate to="analytics" replace />} />
           </Routes>
         </main>

@@ -24,6 +24,8 @@ const userSchema = new mongoose.Schema({
   avatar:    { type: String, default: '' },
   phone:     { type: String, default: '' },
   isActive:  { type: Boolean, default: true },
+  fakeOrderCount: { type: Number, default: 0 },
+  isRestricted:   { type: Boolean, default: false },
 }, { timestamps: true });
 
 // Hash password before save
