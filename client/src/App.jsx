@@ -21,6 +21,7 @@ import OrderConfirm from './pages/OrderConfirm';
 import UserDashboard from './pages/UserDashboard';
 import OAuthSuccess from './pages/OAuthSuccess';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import OrderReceipt from './pages/OrderReceipt';
 
 // State Actions
 import { fetchCurrentUser } from './features/auth/authSlice';
@@ -83,6 +84,14 @@ function AppLayout() {
             element={
               <ProtectedRoute>
                 <OrderConfirm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order/:orderId/receipt"
+            element={
+              <ProtectedRoute>
+                <OrderReceipt />
               </ProtectedRoute>
             }
           />

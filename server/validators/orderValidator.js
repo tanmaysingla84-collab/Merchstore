@@ -43,7 +43,7 @@ const createOrderSchema = z.object({
  * PUT /api/admin/orders/:id/status
  */
 const updateOrderStatusSchema = z.object({
-  status: z.enum(['placed', 'packed', 'shipped', 'delivered', 'cancelled'], {
+  status: z.enum(['placed', 'packed', 'shipped', 'delivered', 'cancelled', 'returned', 'fraudulent'], {
     errorMap: () => ({ message: 'Invalid order status' }),
   }),
   note: z.string().max(500).optional(),
@@ -64,7 +64,7 @@ const updateOrderPaymentStatusSchema = z.object({
 const adminOrdersQuerySchema = z.object({
   page:          z.string().optional().transform(v => parseInt(v, 10) || 1),
   limit:         z.string().optional().transform(v => Math.min(parseInt(v, 10) || 20, 100)),
-  status:        z.enum(['placed', 'packed', 'shipped', 'delivered', 'cancelled']).optional(),
+  status:        z.enum(['placed', 'packed', 'shipped', 'delivered', 'cancelled', 'returned', 'fraudulent']).optional(),
   paymentMethod: z.enum(['stripe', 'cod', 'upi']).optional(),
   startDate:     z.string().optional(),
   endDate:       z.string().optional(),
